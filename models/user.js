@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       required: [true, 'User must have an email'],
-      maxlength: [100, 'Maximu length for email is 100 charcters'],
+      maxlength: [100, 'Maximum length for email is 100 charcters'],
       validate: {
         validator(val) {
           return validator.isEmail(val);
@@ -33,6 +33,19 @@ const userSchema = new mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetTokenExpires: Date,
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    blocked: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'user'],
+      default: 'user',
+    },
     name: {
       type: String,
       maxlength: [100, 'Name maximum length is 100 characters'],
