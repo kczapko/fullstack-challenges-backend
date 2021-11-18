@@ -11,7 +11,7 @@ const databaseUrl =
 const init = async () => {
   await mongoose.connect(databaseUrl);
   app.listen(port, () => {
-    console.log('🤟 Server started');
+    console.log(`🤟 Server started in ${process.env.NODE_ENV} mode`);
   });
 };
 
