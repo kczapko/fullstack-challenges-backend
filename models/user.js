@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       required: [true, 'User must have an email'],
-      maxlength: [100, 'Maximum length for email is 100 charcters'],
+      maxlength: [100, 'Maximum length for email is 100 characters'],
       validate: {
         validator(val) {
           return validator.isEmail(val);
@@ -19,8 +19,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'User must have a password'],
-      minlength: [8, 'Password must have at least 8 charctres'],
-      maxlength: [32, 'Password maximum length is 32 charctres'],
+      minlength: [8, 'Password must have at least 8 charactres'],
     },
     passwordConfirm: {
       type: String,
@@ -78,6 +77,10 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+userSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
 
 userSchema.pre('save', async function (next) {
   if (!this.isNew) return next();
