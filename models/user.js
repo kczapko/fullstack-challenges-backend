@@ -70,6 +70,10 @@ const userSchema = new mongoose.Schema(
         message: 'Invalid phone number',
       },
     },
+    photo: {
+      type: String,
+      maxlength: [100, 'Maximum photo url length is 100 charcters'],
+    },
   },
   { timestamps: true },
 );
