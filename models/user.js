@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
@@ -72,10 +73,23 @@ const userSchema = new mongoose.Schema(
     },
     photo: {
       type: String,
-      maxlength: [100, 'Maximum photo url length is 100 charcters'],
+      maxlength: [100, 'Maximum photo url length is 100 characters'],
     },
   },
   { timestamps: true },
 );
+
+userSchema.pre('save', async function (next) {
+  if (!this.isNew) return next();
+
+  try {
+    this.password = await bcrypt.hash(this.password, 13);
+  } catch (e) {
+    throw e;
+  }
+
+  this.passwordConfirm = undefined;
+  next();
+});
 
 module.exports = mongoose.model('User', userSchema);
