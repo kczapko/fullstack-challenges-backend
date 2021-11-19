@@ -14,6 +14,10 @@ module.exports = {
         throw new Error('User not found');
       }
 
+      if (user.blocked) {
+        throw new Error('Your account has been blocked');
+      }
+
       if (user.loginAttempts >= process.env.MAX_LOGIN_ATTEMPTS) {
         throw new Error('Maximum login attempts reached! Please reset your password.');
       }
