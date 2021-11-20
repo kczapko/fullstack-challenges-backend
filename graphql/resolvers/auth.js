@@ -1,14 +1,14 @@
 const validator = require('validator');
 
 const User = require('../../models/user');
+const { generateToken } = require('../../utils/token');
 
 module.exports = {
   login: async ({ loginInput }) => {
     const { email, password } = loginInput;
-    let user;
 
     try {
-      user = await User.findOne({ email });
+      const user = await User.findOne({ email });
 
       if (!user) {
         throw new Error('User not found');
@@ -27,8 +27,10 @@ module.exports = {
         throw new Error('Wrong password');
       }
 
+      const token = await generateToken({ id: user._id });
+
       return {
-        token: '123',
+        token,
         user,
       };
     } catch (e) {
@@ -37,7 +39,6 @@ module.exports = {
   },
   signup: async ({ signupInput }) => {
     const { email, password, passwordConfirm } = signupInput;
-    let user;
 
     if (
       !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
@@ -47,14 +48,15 @@ module.exports = {
     }
 
     try {
-      user = await User.create({ email, password, passwordConfirm });
+      const user = await User.create({ email, password, passwordConfirm });
+      const token = await generateToken({ id: user._id });
+
+      return {
+        token,
+        user,
+      };
     } catch (e) {
       throw e;
     }
-
-    return {
-      token: '123',
-      user,
-    };
   },
 };
