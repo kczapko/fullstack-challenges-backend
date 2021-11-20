@@ -64,7 +64,7 @@ module.exports = {
     try {
       let user = await User.findOne({ email });
       if (user) {
-        throw new AppError(`User with that email aleredy exists.`, errorTypes.VALIDATION, 400);
+        throw new AppError(`User with that email already exists.`, errorTypes.VALIDATION, 400);
       }
 
       user = await User.create({ email, password, passwordConfirm });
