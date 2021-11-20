@@ -4,6 +4,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const { graphqlHTTP } = require('express-graphql');
 const schema = require('./graphql/schema');
 const resolver = require('./graphql/resolvers');
+const globalErrorHandler = require('./middleware/error');
+const graphqlErrorHandler = require('./utils/graphqlError');
 
 const app = express();
 
@@ -16,29 +18,12 @@ app.use(
     schema: schema,
     rootValue: resolver,
     graphiql: process.env.NODE_ENV === 'development',
-    customFormatErrorFn: (error) => {
-      console.log('🧨🧨🧨');
-      console.log(error.originalError ? error.originalError : error);
-      console.log('🧨🧨🧨');
-
-      return {
-        message: error.message,
-        locations: error.locations,
-        stack: error.stack ? error.stack.split('\n') : [],
-        path: error.path,
-        original: error.originalError,
-      };
-    },
+    customFormatErrorFn: graphqlErrorHandler,
   }),
 );
 
 app.use(helmet());
 
-app.use((error, req, res, next) => {
-  console.log(`🎃🎃🎃`);
-  console.log(error);
-  console.log(`🎃🎃🎃`);
-  res.send(500).json({ message: 'Internal server error' });
-});
+app.use(globalErrorHandler);
 
 module.exports = app;
