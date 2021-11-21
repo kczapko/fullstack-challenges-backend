@@ -33,6 +33,7 @@ const schema = buildSchema(`
 
   type RootMutation {
     signup(signupInput: SignupInputData!): AuthData!
+    signinWithGoogle(idToken: String!): AuthData!
   }
 
   schema {
