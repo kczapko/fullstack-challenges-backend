@@ -29,12 +29,14 @@ const schema = buildSchema(`
 
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
+    authWithTwitter: String!
   }
 
   type RootMutation {
     signup(signupInput: SignupInputData!): AuthData!
     signinWithGoogle(idToken: String!): AuthData!
     signinWithFacebook(accessToken: String!, userId: String!): AuthData!
+    signinWithTwitter(oauthToken: String!, oauthVerifier: String!): AuthData!
   }
 
   schema {

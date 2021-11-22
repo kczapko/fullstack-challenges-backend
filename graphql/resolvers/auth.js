@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const validator = require('validator');
 const { OAuth2Client } = require('google-auth-library');
 const axios = require('axios');
+const OAuth = require('oauth-1.0a');
 
 const User = require('../../models/user');
 const { generateToken } = require('../../utils/token');
@@ -189,6 +190,120 @@ module.exports = {
       }
 
       //5 Send auth data
+      const token = await generateToken({ id: user._id });
+
+      return {
+        token,
+        user,
+      };
+    } catch (e) {
+      throw e;
+    }
+  },
+  authWithTwitter: async () => {
+    const oauth = OAuth({
+      consumer: {
+        key: process.env.TWITTER_API_KEY,
+        secret: process.env.TWITTER_API_KEY_SECRET,
+      },
+      signature_method: 'HMAC-SHA1',
+      hash_function(base_string, key) {
+        return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+      },
+    });
+
+    const request_data = {
+      url: `https://api.twitter.com/oauth/request_token?oauth_callback=${encodeURIComponent(
+        process.env.TWITTER_CALLBACK_URL,
+      )}`,
+      method: 'POST',
+    };
+
+    const headers = oauth.toHeader(oauth.authorize(request_data));
+
+    try {
+      const res = await axios({
+        url: request_data.url,
+        method: request_data.method,
+        headers,
+      });
+
+      const auth = Object.fromEntries(res.data.split('&').map((data) => data.split('=')));
+
+      return `https://api.twitter.com/oauth/authenticate?oauth_token=${auth.oauth_token}`;
+    } catch (e) {
+      throw e;
+    }
+  },
+  signinWithTwitter: async ({ oauthToken, oauthVerifier }) => {
+    try {
+      let res = await axios.post(
+        `https://api.twitter.com/oauth/access_token?oauth_verifier=${oauthVerifier}&oauth_token=${oauthToken}`,
+      );
+
+      const access = Object.fromEntries(res.data.split('&').map((data) => data.split('=')));
+
+      const oauth = OAuth({
+        consumer: {
+          key: process.env.TWITTER_API_KEY,
+          secret: process.env.TWITTER_API_KEY_SECRET,
+        },
+        signature_method: 'HMAC-SHA1',
+        hash_function(base_string, key) {
+          return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+        },
+      });
+
+      const request_data = {
+        url: `https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true`,
+        method: 'GET',
+      };
+
+      const headers = oauth.toHeader(
+        oauth.authorize(request_data, {
+          key: access.oauth_token,
+          secret: access.oauth_token_secret,
+        }),
+      );
+
+      res = await axios({
+        url: request_data.url,
+        method: request_data.method,
+        headers,
+      });
+
+      const data = res.data;
+
+      if (data.suspended) {
+        throw new AppError('Your twitter account is suspended.', errorTypes.VALIDATION, 403);
+      }
+
+      // Check if user exists
+      let user = await User.findOne({ email: data.email });
+
+      if (user && user.blocked) {
+        throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
+      }
+
+      // Create new account
+      if (!user) {
+        const password = crypto
+          .createHash('sha256')
+          .update(Math.random().toString())
+          .digest()
+          .toString('hex');
+
+        user = await User.create({
+          email: data.email,
+          password,
+          passwordConfirm: password,
+          name: data.name,
+          photo: data.profile_image_url_https,
+          bio: data.description,
+        });
+      }
+
+      //Send auth data
       const token = await generateToken({ id: user._id });
 
       return {

@@ -14,7 +14,12 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(
   cors({
-    origin: ['http://localhost:8080', 'https://localhost:8080'],
+    origin: [
+      'http://localhost:8080',
+      'https://localhost:8080',
+      'http://127.0.0.1:8080',
+      'https://127.0.0.1:8080',
+    ],
   }),
 );
 
