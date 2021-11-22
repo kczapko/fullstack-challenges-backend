@@ -72,7 +72,7 @@ const userSchema = new mongoose.Schema(
     },
     photo: {
       type: String,
-      maxlength: [100, 'Maximum photo url length is 100 characters.'],
+      maxlength: [200, 'Maximum photo url length is 200 characters.'],
     },
   },
   { timestamps: true },

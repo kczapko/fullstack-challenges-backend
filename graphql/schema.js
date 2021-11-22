@@ -34,6 +34,7 @@ const schema = buildSchema(`
   type RootMutation {
     signup(signupInput: SignupInputData!): AuthData!
     signinWithGoogle(idToken: String!): AuthData!
+    signinWithFacebook(accessToken: String!, userId: String!): AuthData!
   }
 
   schema {

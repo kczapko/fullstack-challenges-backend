@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(
   cors({
-    origin: ['http://localhost:8080'],
+    origin: ['http://localhost:8080', 'https://localhost:8080'],
   }),
 );
 
