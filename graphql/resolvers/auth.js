@@ -10,6 +10,10 @@ const { generateToken } = require('../../utils/token');
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
 
+const generatePassword = () => {
+  return crypto.createHash('sha256').update(Math.random().toString()).digest().toString('hex');
+};
+
 module.exports = {
   login: async ({ loginInput }) => {
     const { email, password } = loginInput;
@@ -107,11 +111,7 @@ module.exports = {
 
       //2a Create new account
       if (!user) {
-        const password = crypto
-          .createHash('sha256')
-          .update(Math.random().toString())
-          .digest()
-          .toString('hex');
+        const password = generatePassword();
 
         user = await User.create({
           email: payload.email,
@@ -174,11 +174,7 @@ module.exports = {
 
       //4a Create new account
       if (!user) {
-        const password = crypto
-          .createHash('sha256')
-          .update(Math.random().toString())
-          .digest()
-          .toString('hex');
+        const password = generatePassword();
 
         user = await User.create({
           email: data.email,
@@ -287,11 +283,7 @@ module.exports = {
 
       // Create new account
       if (!user) {
-        const password = crypto
-          .createHash('sha256')
-          .update(Math.random().toString())
-          .digest()
-          .toString('hex');
+        const password = generatePassword();
 
         user = await User.create({
           email: data.email,
@@ -300,6 +292,79 @@ module.exports = {
           name: data.name,
           photo: data.profile_image_url_https,
           bio: data.description,
+        });
+      }
+
+      //Send auth data
+      const token = await generateToken({ id: user._id });
+
+      return {
+        token,
+        user,
+      };
+    } catch (e) {
+      throw e;
+    }
+  },
+  authWithGithub: () => {
+    const state = generatePassword();
+
+    return {
+      url: `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&state=${state}&scope=read:user%20user:email`,
+      state: state,
+    };
+  },
+  signinWithGithub: async ({ code }) => {
+    try {
+      let res = await axios({
+        method: 'post',
+        url: 'https://github.com/login/oauth/access_token',
+        params: {
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code: code,
+        },
+        headers: { Accept: 'application/json' },
+      });
+
+      const accessToken = res.data.access_token;
+      const tokenType = res.data.token_type;
+
+      res = await axios({
+        url: 'https://api.github.com/user',
+        headers: {
+          Authorization: `${tokenType} ${accessToken}`,
+        },
+      });
+
+      const data = res.data;
+
+      if (!data.email) {
+        throw new AppError(
+          "You don't have public email set on yout github profile.",
+          errorTypes.VALIDATION,
+          403,
+        );
+      }
+
+      // Check if user exists
+      let user = await User.findOne({ email: data.email });
+
+      if (user && user.blocked) {
+        throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
+      }
+
+      // Create new account
+      if (!user) {
+        const password = generatePassword();
+
+        user = await User.create({
+          email: data.email,
+          password,
+          passwordConfirm: password,
+          name: data.name,
+          photo: data.avatar_url,
+          bio: data.bio,
         });
       }
 

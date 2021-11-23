@@ -16,6 +16,11 @@ const schema = buildSchema(`
     user: User!
   }
 
+  type GithubAuthData {
+    url: String!
+    state: String!
+  }
+
   input SignupInputData {
     email: String!
     password: String!
@@ -30,6 +35,7 @@ const schema = buildSchema(`
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
     authWithTwitter: String!
+    authWithGithub: GithubAuthData!
   }
 
   type RootMutation {
@@ -37,6 +43,7 @@ const schema = buildSchema(`
     signinWithGoogle(idToken: String!): AuthData!
     signinWithFacebook(accessToken: String!, userId: String!): AuthData!
     signinWithTwitter(oauthToken: String!, oauthVerifier: String!): AuthData!
+    signinWithGithub(code: String!): AuthData!
   }
 
   schema {
