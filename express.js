@@ -3,10 +3,12 @@ const helmet = require('helmet');
 const cors = require('cors');
 const mongoSanitize = require('express-mongo-sanitize');
 const { graphqlHTTP } = require('express-graphql');
+
 const schema = require('./graphql/schema');
 const resolver = require('./graphql/resolvers');
 const globalErrorHandler = require('./middleware/error');
 const graphqlErrorHandler = require('./utils/graphqlError');
+const auth = require('./middleware/auth');
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use(
     ],
   }),
 );
+
+app.use(auth);
 
 app.use(
   '/graphql',

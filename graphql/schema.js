@@ -16,6 +16,10 @@ const schema = buildSchema(`
     user: User!
   }
 
+  type UserData {
+    user: User!
+  }
+
   type GithubAuthData {
     url: String!
     state: String!
@@ -34,6 +38,7 @@ const schema = buildSchema(`
 
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
+    autologin: UserData
     authWithTwitter: String!
     authWithGithub: GithubAuthData!
   }
