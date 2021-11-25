@@ -9,6 +9,7 @@ const User = require('../../models/user');
 const { generateToken } = require('../../utils/token');
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
+const Email = require('../../utils/Email');
 
 const generatePassword = () => {
   return crypto.createHash('sha256').update(Math.random().toString()).digest().toString('hex');
@@ -82,6 +83,11 @@ module.exports = {
 
       user = await User.create({ email, password, passwordConfirm });
       const token = await generateToken({ id: user._id });
+
+      const verificationEmail = new Email('base', 'Confirm your email address', email, {
+        name: email,
+      });
+      await verificationEmail.send();
 
       return {
         token,

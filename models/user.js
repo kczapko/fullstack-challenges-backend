@@ -13,8 +13,12 @@ const userSchema = new mongoose.Schema(
         validator(val) {
           return validator.isEmail(val);
         },
-        message: '{VALUE} is not valid email',
+        message: '{VALUE} is not valid email.',
       },
+    },
+    emailConfirmed: {
+      type: Boolean,
+      default: false,
     },
     password: {
       type: String,
