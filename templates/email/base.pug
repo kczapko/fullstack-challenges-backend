@@ -9,7 +9,26 @@ html
     table.background(border='0', cellpadding='0', cellspacing='0')
       tr
         td
-          h1 Hello #{name}
-          p Some text
-          a(href="#") link
-          img(src="http://localhost:3333/images/email/devchallenges.png" alt="")
+        td(align="center" width='600')
+          table.content(border='0', cellpadding='0', cellspacing='0')
+            tr 
+              td(width="10") &nbsp;
+              td(width="580")
+                .logo 
+                  img(src="http://localhost:3333/images/email/devchallenges.png")
+              td(width="10") &nbsp;
+            tr 
+              td(width="10") &nbsp;
+              td(width="580")
+                .main 
+                  block content
+              td(width="10") &nbsp;
+            tr 
+              td(width="10") &nbsp;
+              td(width="580")
+                .footer 
+                  block footer
+                    .footer 
+                      small This email was generated automaticly. Please do not respond to it.
+              td(width="10") &nbsp;
+        td

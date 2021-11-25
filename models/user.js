@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+const { VerificationEmail } = require('../utils/emails');
+const { generateToken } = require('../utils/token');
+
 const userSchema = new mongoose.Schema(
   {
     email: {
@@ -96,7 +99,23 @@ userSchema.pre('save', async function (next) {
   }
 
   this.passwordConfirm = undefined;
+  this.wasNew = true;
+
   next();
+});
+
+userSchema.post('save', async function (doc) {
+  if (this.wasNew) {
+    try {
+      const email = new VerificationEmail(doc.email, {
+        name: doc.name || doc.email,
+        token: await generateToken({ email: doc.email }, '1h'),
+      });
+      await email.send();
+    } catch (e) {
+      throw e;
+    }
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);

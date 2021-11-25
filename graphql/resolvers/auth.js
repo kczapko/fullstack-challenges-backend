@@ -84,11 +84,6 @@ module.exports = {
       user = await User.create({ email, password, passwordConfirm });
       const token = await generateToken({ id: user._id });
 
-      const verificationEmail = new Email('base', 'Confirm your email address', email, {
-        name: email,
-      });
-      await verificationEmail.send();
-
       return {
         token,
         user,
