@@ -8,6 +8,11 @@ const handleDBValidationError = (err) => {
   return new AppError(message, errorTypes.VALIDATION, 400);
 };
 
+const handleWebTokenError = (err) => new AppError('Wrong token', errorTypes.AUTHENTICATION, 401);
+
+const handleWebTokenExpiredError = (err) =>
+  new AppError('Token expired', errorTypes.AUTHENTICATION, 401);
+
 module.exports = (error) => {
   let err;
 
@@ -16,6 +21,8 @@ module.exports = (error) => {
 
     if (e instanceof AppError) err = e;
     if (e.name === 'ValidationError') err = handleDBValidationError(err);
+    if (e.name === 'JsonWebTokenError') err = handleWebTokenError(err);
+    if (e.name === 'TokenExpiredError') err = handleWebTokenExpiredError(err);
   }
 
   return { message: err ? err.message : error.message };

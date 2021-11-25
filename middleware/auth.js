@@ -1,4 +1,6 @@
 const User = require('../models/user');
+const AppError = require('../utils/AppError');
+const errorTypes = require('../utils/errorTypes');
 const { decodeToken } = require('../utils/token');
 
 module.exports = async (req, res, next) => {
@@ -10,9 +12,26 @@ module.exports = async (req, res, next) => {
   try {
     const decoded = await decodeToken(token);
     const user = await User.findById(decoded.id);
-    if (user) req.user = user;
+
+    if (user) {
+      if (user.blocked)
+        req.authError = new AppError(
+          'Your account has been blocked',
+          errorTypes.AUTHENTICATION,
+          403,
+        );
+
+      if (user.passwordChangedAt && user.passwordChangedAt > new Date(decoded.iat * 1000))
+        req.authError = new AppError(
+          'You recently changed password. Please login again.',
+          errorTypes.AUTHENTICATION,
+          403,
+        );
+
+      if (!req.authError) req.user = user;
+    }
   } catch (e) {
-    console.log(e);
+    req.authError = e;
   }
 
   next();

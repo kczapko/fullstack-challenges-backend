@@ -56,8 +56,9 @@ module.exports = {
       throw e;
     }
   },
-  autologin: async (args, context) => {
-    if (context.user) return { user: context.user };
+  autologin: async (args, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) return { user: req.user };
   },
   signup: async ({ signupInput }) => {
     const { email, password, passwordConfirm } = signupInput;
