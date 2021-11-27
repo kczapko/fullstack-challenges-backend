@@ -5,11 +5,12 @@ const pug = require('pug');
 const { htmlToText } = require('html-to-text');
 
 class Email {
-  constructor(name, subject, to, data) {
+  constructor(name, subject, to, data = {}) {
     this.name = name;
     this.subject = subject;
     this.to = to;
     this.data = data;
+    this.data.subject = subject;
 
     this.#compileTemplate();
     this.#createTransporter();

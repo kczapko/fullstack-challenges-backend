@@ -9,10 +9,9 @@ const User = require('../../models/user');
 const { generateToken } = require('../../utils/token');
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
-const Email = require('../../utils/Email');
 
 const generatePassword = () => {
-  return crypto.createHash('sha256').update(Math.random().toString()).digest().toString('hex');
+  return crypto.randomBytes(32).toString('hex');
 };
 
 module.exports = {

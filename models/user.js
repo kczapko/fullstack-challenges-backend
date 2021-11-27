@@ -1,9 +1,18 @@
+const crypto = require('crypto');
+
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 const { VerificationEmail } = require('../utils/emails');
-const { generateToken } = require('../utils/token');
+
+const generateToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+const hashToken = (token) => {
+  return crypto.createHash('sha256').update(token).digest().toString('hex');
+};
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,6 +32,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    emailConfirmationToken: String,
     password: {
       type: String,
       required: [true, 'User must have a password.'],
@@ -89,33 +99,64 @@ userSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.pre('save', async function (next) {
-  if (!this.isNew) return next();
+userSchema.methods.sendVerificationEmail = async function (emailAddress, changed = false) {
+  const token = generateToken();
+  const email = new VerificationEmail(emailAddress, {
+    name: this.name || this.email,
+    token,
+    changed,
+  });
 
   try {
-    this.password = await bcrypt.hash(this.password, 13);
+    await email.send();
+
+    this.emailConfirmationToken = hashToken(token);
+    await this.save();
+  } catch (e) {
+    throw e;
+  }
+};
+
+userSchema.methods.verifyEmail = async function (token) {
+  if (this.emailConfirmationToken !== hashToken(token)) return false;
+
+  this.emailConfirmed = true;
+  this.emailConfirmationToken = undefined;
+
+  try {
+    await this.save();
   } catch (e) {
     throw e;
   }
 
-  this.passwordConfirm = undefined;
+  return true;
+};
+
+userSchema.pre('save', function (next) {
+  if (!this.isNew) return next();
+
   this.wasNew = true;
+  next();
+});
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  try {
+    this.password = await bcrypt.hash(this.password, 13);
+    this.passwordConfirm = undefined;
+  } catch (e) {
+    throw e;
+  }
 
   next();
 });
 
 userSchema.post('save', async function (doc) {
-  if (this.wasNew) {
-    try {
-      const email = new VerificationEmail(doc.email, {
-        name: doc.name || doc.email,
-        token: await generateToken({ email: doc.email }, '1h'),
-      });
-      await email.send();
-    } catch (e) {
-      throw e;
-    }
-  }
+  if (!this.wasNew) return;
+  this.wasNew = false;
+
+  await this.sendVerificationEmail(doc.email);
 });
 
 module.exports = mongoose.model('User', userSchema);

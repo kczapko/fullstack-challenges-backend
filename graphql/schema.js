@@ -9,6 +9,7 @@ const schema = buildSchema(`
     bio: String
     phone: String
     photo: String
+    emailConfirmed: Boolean!
   }
 
   type AuthData {
@@ -49,6 +50,8 @@ const schema = buildSchema(`
     signinWithFacebook(accessToken: String!, userId: String!): AuthData!
     signinWithTwitter(oauthToken: String!, oauthVerifier: String!): AuthData!
     signinWithGithub(code: String!): AuthData!
+    confirmEmail(token: String!): Boolean!
+    resendConfirmEmail: Boolean!
   }
 
   schema {
