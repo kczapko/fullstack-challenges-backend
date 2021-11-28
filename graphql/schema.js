@@ -47,6 +47,7 @@ const schema = buildSchema(`
     autologin: UserData!
     authWithTwitter: String!
     authWithGithub: GithubAuthData!
+    me: User!
   }
 
   type RootMutation {

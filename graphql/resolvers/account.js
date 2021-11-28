@@ -23,4 +23,8 @@ module.exports = {
     }
     return false;
   },
+  me: async (args, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) return req.user;
+  },
 };
