@@ -11,7 +11,7 @@ module.exports = {
     }
     return false;
   },
-  resendConfirmEmail: async ({ token }, req) => {
+  resendConfirmEmail: async (args, req) => {
     if (req.authError) throw req.authError;
     if (req.user) {
       try {
@@ -21,7 +21,6 @@ module.exports = {
         throw e;
       }
     }
-
     return false;
   },
 };

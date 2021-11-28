@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
-const { VerificationEmail } = require('../utils/emails');
+const { VerificationEmail, PasswordResetEmail } = require('../utils/emails');
 
 const generateToken = () => {
   return crypto.randomBytes(32).toString('hex');
@@ -132,6 +132,24 @@ userSchema.methods.verifyEmail = async function (token) {
   return true;
 };
 
+userSchema.methods.sendPasswordResetToken = async function () {
+  const token = generateToken();
+  const email = new PasswordResetEmail(this.email, {
+    name: this.name || this.email,
+    link: `${process.env.APP_URL}/change-password?token=${token}`,
+  });
+
+  try {
+    await email.send();
+
+    this.passwordResetToken = hashToken(token);
+    this.passwordResetTokenExpires = new Date() + 60 * 60 * 1000; //1 hour
+    await this.save();
+  } catch (e) {
+    throw e;
+  }
+};
+
 userSchema.pre('save', function (next) {
   if (!this.isNew) return next();
 
@@ -145,6 +163,9 @@ userSchema.pre('save', async function (next) {
   try {
     this.password = await bcrypt.hash(this.password, 13);
     this.passwordConfirm = undefined;
+    if (!this.isNew) {
+      this.passwordChangedAt = new Date();
+    }
   } catch (e) {
     throw e;
   }

@@ -383,4 +383,16 @@ module.exports = {
       throw e;
     }
   },
+  requestPasswordReset: async ({ email }) => {
+    try {
+      const user = await User.findOne({ email });
+      if (!user) throw new AppError('User not found!', errorTypes.VALIDATION, 400);
+
+      await user.sendPasswordResetToken();
+      return true;
+    } catch (e) {
+      throw e;
+    }
+    return false;
+  },
 };

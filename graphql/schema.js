@@ -2,7 +2,6 @@ const { buildSchema } = require('graphql');
 
 const schema = buildSchema(`
   type User {
-    _id: ID!
     email: String!
     role: String!
     name: String
@@ -52,6 +51,7 @@ const schema = buildSchema(`
     signinWithGithub(code: String!): AuthData!
     confirmEmail(token: String!): Boolean!
     resendConfirmEmail: Boolean!
+    requestPasswordReset(email: String!): Boolean!
   }
 
   schema {
