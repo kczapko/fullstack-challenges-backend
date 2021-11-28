@@ -137,17 +137,23 @@ userSchema.methods.sendPasswordResetToken = async function () {
   const email = new PasswordResetEmail(this.email, {
     name: this.name || this.email,
     link: `${process.env.APP_URL}/change-password?token=${token}`,
+    token,
+    url: `${process.env.APP_URL}/change-password`,
   });
 
   try {
     await email.send();
 
     this.passwordResetToken = hashToken(token);
-    this.passwordResetTokenExpires = new Date() + 60 * 60 * 1000; //1 hour
+    this.passwordResetTokenExpires = Date.now() + 60 * 60 * 1000; //1 hour
     await this.save();
   } catch (e) {
     throw e;
   }
+};
+
+userSchema.statics.getTokenHash = function (token) {
+  return hashToken(token);
 };
 
 userSchema.pre('save', function (next) {
@@ -165,6 +171,8 @@ userSchema.pre('save', async function (next) {
     this.passwordConfirm = undefined;
     if (!this.isNew) {
       this.passwordChangedAt = new Date();
+      this.passwordResetToken = undefined;
+      this.passwordResetTokenExpires = undefined;
     }
   } catch (e) {
     throw e;

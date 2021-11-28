@@ -36,6 +36,12 @@ const schema = buildSchema(`
     password: String!
   }
 
+  input ChangePasswordInputData {
+    token: String!
+    password: String!
+    passwordConfirm: String!
+  }
+
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
     autologin: UserData!
@@ -52,6 +58,7 @@ const schema = buildSchema(`
     confirmEmail(token: String!): Boolean!
     resendConfirmEmail: Boolean!
     requestPasswordReset(email: String!): Boolean!
+    changePassword(changePasswordInput: ChangePasswordInputData!): Boolean!
   }
 
   schema {

@@ -395,4 +395,36 @@ module.exports = {
     }
     return false;
   },
+  changePassword: async (args) => {
+    const { token, password, passwordConfirm } = args.changePasswordInput;
+
+    if (
+      !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
+      !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
+    ) {
+      throw new AppError(
+        `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
+        errorTypes.VALIDATION,
+        400,
+      );
+    }
+
+    try {
+      const user = await User.findOne({
+        passwordResetToken: User.getTokenHash(token),
+        passwordResetTokenExpires: { $gte: new Date() },
+      });
+
+      if (!user) throw new AppError(`Wrong token or token expired`, errorTypes.VALIDATION, 400);
+
+      user.password = password;
+      user.passwordConfirm = passwordConfirm;
+      await user.save();
+
+      return true;
+    } catch (e) {
+      throw e;
+    }
+    return false;
+  },
 };
