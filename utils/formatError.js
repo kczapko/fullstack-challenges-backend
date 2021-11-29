@@ -20,9 +20,9 @@ module.exports = (error) => {
     const e = error.originalError;
 
     if (e instanceof AppError) err = e;
-    if (e.name === 'ValidationError') err = handleDBValidationError(err);
-    if (e.name === 'JsonWebTokenError') err = handleWebTokenError(err);
-    if (e.name === 'TokenExpiredError') err = handleWebTokenExpiredError(err);
+    if (e.name === 'ValidationError') err = handleDBValidationError(e);
+    if (e.name === 'JsonWebTokenError') err = handleWebTokenError(e);
+    if (e.name === 'TokenExpiredError') err = handleWebTokenExpiredError(e);
   }
 
   return { message: err ? err.message : error.message };

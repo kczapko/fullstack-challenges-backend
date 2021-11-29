@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
   {
     email: {
       type: String,
+      trim: true,
       unique: true,
       required: [true, 'User must have an email.'],
       maxlength: [100, 'Maximum length for email is 100 characters.'],
@@ -65,24 +66,35 @@ const userSchema = new mongoose.Schema(
     },
     name: {
       type: String,
+      trim: true,
       maxlength: [100, 'Name maximum length is 100 characters.'],
-      validator: {
-        validate(val) {
-          return validator.isAlpha(val, 'en-US', { ignore: ' ' });
+      validate: {
+        validator(val) {
+          if (val) {
+            return validator.isAlphaLocales.some((locale) =>
+              validator.isAlpha(val, locale, { ignore: ' ' }),
+            );
+          }
+          return true;
         },
         message: 'Name can contain only alphabetical characters and spaces.',
       },
     },
     bio: {
       type: String,
+      trim: true,
       maxlength: [1000, 'Bio maximum length is 1000 characters.'],
     },
     phone: {
       type: String,
+      trim: true,
       maxlength: [50, 'Maximum phone number length is 50 characters.'],
-      validator: {
-        validate(val) {
-          return validator.isMobilePhone(val);
+      validate: {
+        validator(val) {
+          if (val) {
+            return validator.isMobilePhone(val);
+          }
+          return true;
         },
         message: 'Invalid phone number.',
       },

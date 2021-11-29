@@ -27,4 +27,22 @@ module.exports = {
     if (req.authError) throw req.authError;
     if (req.user) return req.user;
   },
+  changeMyData: async (args, req) => {
+    const { name, bio, phone } = args.userDataInput;
+
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        req.user.set({
+          name,
+          bio,
+          phone,
+        });
+        const user = await req.user.save();
+        return user;
+      } catch (e) {
+        throw e;
+      }
+    }
+  },
 };
