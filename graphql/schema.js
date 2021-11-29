@@ -48,6 +48,12 @@ const schema = buildSchema(`
     phone: String
   }
 
+  input ChangeMyPasswordInputData {
+    currentPassword: String!
+    password: String!
+    passwordConfirm: String!
+  }
+
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
     autologin: UserData!
@@ -67,6 +73,7 @@ const schema = buildSchema(`
     requestPasswordReset(email: String!): Boolean!
     changePassword(changePasswordInput: ChangePasswordInputData!): Boolean!
     changeMyData(userDataInput: UserInputData!): User!
+    changeMyPassword(changeMyPasswordInput: ChangeMyPasswordInputData!): Boolean!
   }
 
   schema {

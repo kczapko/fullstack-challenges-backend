@@ -1,3 +1,8 @@
+const validator = require('validator');
+
+const AppError = require('../../utils/AppError');
+const errorTypes = require('../../utils/errorTypes');
+
 module.exports = {
   confirmEmail: async ({ token }, req) => {
     if (req.authError) throw req.authError;
@@ -44,5 +49,36 @@ module.exports = {
         throw e;
       }
     }
+  },
+  changeMyPassword: async (args, req) => {
+    const { currentPassword, password, passwordConfirm } = args.changeMyPasswordInput;
+
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        if (!(await req.user.comparePassword(currentPassword)))
+          throw new AppError('Wrong current password', errorTypes.VALIDATION, 400);
+
+        if (
+          !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
+          !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
+        ) {
+          throw new AppError(
+            `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
+            errorTypes.VALIDATION,
+            400,
+          );
+        }
+
+        req.user.password = password;
+        req.user.passwordConfirm = passwordConfirm;
+        await req.user.save();
+
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    }
+    return false;
   },
 };
