@@ -1,11 +1,11 @@
 const formatError = require('./formatError');
 
 module.exports = (error) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🧨🧨🧨');
-    console.log(error.originalError ? error.originalError : error);
-    console.log('🧨🧨🧨');
+  console.log('🧨🧨🧨');
+  console.error(error.originalError ? error.originalError : error);
+  console.log('🧨🧨🧨');
 
+  if (process.env.NODE_ENV === 'development') {
     return {
       message: error.message,
       locations: error.locations,

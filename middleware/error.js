@@ -1,8 +1,9 @@
 module.exports = (error, req, res, next) => {
+  console.log(`🎃🎃🎃`);
+  console.error(error);
+  console.log(`🎃🎃🎃`);
+
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🎃🎃🎃`);
-    console.log(error);
-    console.log(`🎃🎃🎃`);
     return res.send(500).json({ error });
   }
 

@@ -20,7 +20,7 @@ module.exports = {
     if (req.authError) throw req.authError;
     if (req.user) {
       try {
-        await req.user.sendVerificationEmail(req.user.email);
+        await req.user.sendVerificationEmail();
         return true;
       } catch (e) {
         throw e;
@@ -95,5 +95,46 @@ module.exports = {
       }
     }
     return false;
+  },
+  changeMyEmail: async ({ email }, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        req.user.newEmail = email;
+        await req.user.save();
+        await req.user.sendVerificationEmail(req.user.email, true);
+        await req.user.sendVerificationEmail(req.user.newEmail, true, true);
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    }
+    return false;
+  },
+  cancelMyNewEmail: async ({ email }, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        req.user.newEmail = undefined;
+        req.user.emailConfirmationToken = undefined;
+        req.user.newEmailConfirmationToken = undefined;
+        await req.user.save();
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    }
+    return false;
+  },
+  confirmMyNewEmail: async ({ currentEmailToken, newEmailtoken }, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        await req.user.changeEmail(currentEmailToken, newEmailtoken);
+        return req.user;
+      } catch (e) {
+        throw e;
+      }
+    }
   },
 };

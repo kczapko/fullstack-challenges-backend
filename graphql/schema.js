@@ -9,6 +9,7 @@ const schema = buildSchema(`
     phone: String
     photo: String
     emailConfirmed: Boolean!
+    newEmail: String
   }
 
   type UserPublic {
@@ -82,6 +83,9 @@ const schema = buildSchema(`
     changePassword(changePasswordInput: ChangePasswordInputData!): Boolean!
     changeMyData(userDataInput: UserInputData!): User!
     changeMyPassword(changeMyPasswordInput: ChangeMyPasswordInputData!): Boolean!
+    changeMyEmail(email: String!): Boolean!
+    cancelMyNewEmail: Boolean!
+    confirmMyNewEmail(currentEmailToken: String!, newEmailtoken: String!): User!
     deleteMyAccount(password: String!): Boolean!
   }
 

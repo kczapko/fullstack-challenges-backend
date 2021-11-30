@@ -3,7 +3,10 @@ extends base
 block content 
   h1 Hello #{name}!
   if changed
-    p To change your e-mail address you need to verify it.
+    if newEmail
+      p To change your e-mail address you need to verify that new e-mail address belongs to you.
+    else
+      p To change your e-mail address you need to verify that current e-mail address belongs to you.
   else
     p Welcome to fullstack challenge from devchallenges.io.
     p To activate your account you need to verify your e-mail.

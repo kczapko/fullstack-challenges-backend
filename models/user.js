@@ -5,6 +5,8 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 const { VerificationEmail, PasswordResetEmail } = require('../utils/emails');
+const AppError = require('../utils/AppError');
+const errorTypes = require('../utils/errorTypes');
 
 const generateToken = () => {
   return crypto.randomBytes(32).toString('hex');
@@ -103,6 +105,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxlength: [200, 'Maximum photo url length is 200 characters.'],
     },
+    newEmail: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Maximum length for email is 100 characters.'],
+      validate: {
+        validator(val) {
+          return validator.isEmail(val);
+        },
+        message: '{VALUE} is not valid email.',
+      },
+    },
+    newEmailConfirmationToken: String,
   },
   { timestamps: true },
 );
@@ -111,19 +125,28 @@ userSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.sendVerificationEmail = async function (emailAddress, changed = false) {
+userSchema.methods.sendVerificationEmail = async function (
+  emailAddress,
+  changed = false,
+  newEmail = false,
+) {
   const token = generateToken();
-  const email = new VerificationEmail(emailAddress, {
+  const email = new VerificationEmail(emailAddress ? emailAddress : this.email, {
     name: this.name || this.email,
     token,
     changed,
+    newEmail,
   });
 
   try {
-    await email.send();
-
-    this.emailConfirmationToken = hashToken(token);
+    if (newEmail) {
+      this.newEmailConfirmationToken = hashToken(token);
+    } else {
+      this.emailConfirmationToken = hashToken(token);
+    }
     await this.save();
+
+    await email.send();
   } catch (e) {
     throw e;
   }
@@ -144,21 +167,37 @@ userSchema.methods.verifyEmail = async function (token) {
   return true;
 };
 
+userSchema.methods.changeEmail = async function (currentEmailToken, newEmailtoken) {
+  if (this.emailConfirmationToken !== hashToken(currentEmailToken))
+    throw new AppError('Wrong current e-mail token', errorTypes.VALIDATION, 400);
+
+  if (this.newEmailConfirmationToken !== hashToken(newEmailtoken))
+    throw new AppError('Wrong new e-mail token', errorTypes.VALIDATION, 400);
+
+  try {
+    this.email = this.newEmail;
+    this.newEmail = undefined;
+    this.emailConfirmationToken = undefined;
+    this.newEmailConfirmationToken = undefined;
+    await this.save();
+  } catch (e) {
+    throw e;
+  }
+};
+
 userSchema.methods.sendPasswordResetToken = async function () {
   const token = generateToken();
   const email = new PasswordResetEmail(this.email, {
     name: this.name || this.email,
-    link: `${process.env.APP_URL}/change-password?token=${token}`,
     token,
     url: `${process.env.APP_URL}/change-password`,
   });
 
   try {
-    await email.send();
-
     this.passwordResetToken = hashToken(token);
     this.passwordResetTokenExpires = Date.now() + 60 * 60 * 1000; //1 hour
     await this.save();
+    await email.send();
   } catch (e) {
     throw e;
   }
@@ -193,11 +232,11 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-userSchema.post('save', async function (doc) {
+userSchema.post('save', async function () {
   if (!this.wasNew) return;
   this.wasNew = false;
 
-  await this.sendVerificationEmail(doc.email);
+  await this.sendVerificationEmail();
 });
 
 module.exports = mongoose.model('User', userSchema);
