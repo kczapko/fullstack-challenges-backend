@@ -11,13 +11,21 @@ const schema = buildSchema(`
     emailConfirmed: Boolean!
   }
 
+  type UserPublic {
+    email: String!
+    role: String!
+    name: String
+    photo: String
+    emailConfirmed: Boolean!
+  }
+
   type AuthData {
     token: String!
-    user: User!
+    user: UserPublic!
   }
 
   type UserData {
-    user: User!
+    user: UserPublic!
   }
 
   type GithubAuthData {
@@ -74,6 +82,7 @@ const schema = buildSchema(`
     changePassword(changePasswordInput: ChangePasswordInputData!): Boolean!
     changeMyData(userDataInput: UserInputData!): User!
     changeMyPassword(changeMyPasswordInput: ChangeMyPasswordInputData!): Boolean!
+    deleteMyAccount(password: String!): Boolean!
   }
 
   schema {

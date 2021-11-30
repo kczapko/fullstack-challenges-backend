@@ -81,4 +81,19 @@ module.exports = {
     }
     return false;
   },
+  deleteMyAccount: async ({ password }, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        if (!(await req.user.comparePassword(password)))
+          throw new AppError('Wrong password', errorTypes.VALIDATION, 400);
+
+        await req.user.remove();
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    }
+    return false;
+  },
 };
