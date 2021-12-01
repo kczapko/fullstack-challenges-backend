@@ -1,5 +1,7 @@
 const validator = require('validator');
 
+const User = require('../../models/user');
+
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
 
@@ -100,6 +102,9 @@ module.exports = {
     if (req.authError) throw req.authError;
     if (req.user) {
       try {
+        if (await User.findOne({ email }))
+          throw new AppError('User with this e-mail already exists', errorTypes.VALIDATION, 400);
+
         req.user.newEmail = email;
         await req.user.save();
         await req.user.sendVerificationEmail(req.user.email, true);
