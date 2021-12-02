@@ -10,6 +10,8 @@ const globalErrorHandler = require('./middleware/error');
 const graphqlErrorHandler = require('./utils/graphqlError');
 const auth = require('./middleware/auth');
 
+const filesRoutes = require('./routes/files');
+
 const app = express();
 
 app.use(express.static('public'));
@@ -38,6 +40,8 @@ app.use(
     customFormatErrorFn: graphqlErrorHandler,
   }),
 );
+
+app.use('/files', filesRoutes);
 
 app.use(helmet());
 

@@ -1,9 +1,13 @@
 const formatError = require('./formatError');
 
 module.exports = (error) => {
-  console.log('🧨🧨🧨');
-  console.error(error.originalError ? error.originalError : error);
-  console.log('🧨🧨🧨');
+  console.error('🧨🧨🧨 GRAPHQL ERROR START 🧨🧨🧨');
+  console.error(error);
+  if (error.originalError) {
+    console.error('🧨🧨🧨 GRAPHQL ORIGINAL ERROR 🧨🧨🧨');
+    console.error(error.originalError);
+  }
+  console.error('🧨🧨🧨 GRAPHQL ERROR END 🧨🧨🧨');
 
   if (process.env.NODE_ENV === 'development') {
     return {
