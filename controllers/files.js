@@ -15,7 +15,7 @@ exports.saveUserPhoto = catchExpressConfimed(async (req, res, next) => {
     await deleteFile(req.user.photo.replace('.webp', '.png'));
   }
 
-  req.user.photo = `/${publicPath(filename).replaceAll('\\', '/')}`;
+  req.user.photo = `/${publicPath(filename).replace(/\\/g, '/')}`;
   await req.user.save();
 
   return res.status(201).json({ file: req.user.photo });

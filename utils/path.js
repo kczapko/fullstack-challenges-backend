@@ -1,6 +1,6 @@
 const path = require('path');
 
-const baseDir = require.main.path;
+const baseDir = process.cwd();
 const publicPath = (to) => {
   return path.relative(path.join(baseDir, 'public'), to);
 };
