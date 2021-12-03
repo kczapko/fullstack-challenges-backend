@@ -3,6 +3,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
+const inlineCss = require('inline-css');
 
 class Email {
   constructor(name, subject, to, data = {}) {
@@ -43,12 +44,17 @@ class Email {
     }
   }
 
-  #compileTemplate() {
+  async #compileTemplate() {
     this.template = pug.renderFile(
       path.join(__dirname, '..', 'templates', 'email', `${this.name}.pug`),
       this.data,
     );
     this.textTemplate = htmlToText(this.template);
+    try {
+      this.template = await inlineCss(this.template, { url: './' });
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   async send() {
