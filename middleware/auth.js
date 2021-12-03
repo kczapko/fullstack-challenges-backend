@@ -16,7 +16,7 @@ module.exports = async (req, res, next) => {
     if (user) {
       if (user.blocked)
         req.authError = new AppError(
-          'Your account has been blocked',
+          'Your account has been blocked.',
           errorTypes.AUTHENTICATION,
           403,
         );

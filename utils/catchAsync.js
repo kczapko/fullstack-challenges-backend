@@ -15,7 +15,8 @@ module.exports = {
     return async (args, req) => {
       try {
         if (req.authError) throw req.authError;
-        if (!req.user) throw new AppError('User does not exist', errorTypes.AUTHORIZATION, 401);
+        if (!req.user)
+          throw new AppError('User does not exist or was deleted.', errorTypes.AUTHORIZATION, 401);
 
         return await fn(args, req);
       } catch (err) {
@@ -27,7 +28,8 @@ module.exports = {
     return async (args, req) => {
       try {
         if (req.authError) throw req.authError;
-        if (!req.user) throw new AppError('User does not exist', errorTypes.AUTHORIZATION, 401);
+        if (!req.user)
+          throw new AppError('User does not exist or was deleted.', errorTypes.AUTHORIZATION, 401);
         if (!req.user.emailConfirmed)
           throw new AppError('Please confirm your account!', errorTypes.AUTHORIZATION, 403);
 
@@ -50,7 +52,8 @@ module.exports = {
     return async (req, res, next) => {
       try {
         if (req.authError) throw req.authError;
-        if (!req.user) throw new AppError('User does not exist', errorTypes.AUTHORIZATION, 401);
+        if (!req.user)
+          throw new AppError('User does not exist or was deleted.', errorTypes.AUTHORIZATION, 401);
 
         return await fn(req, res, next);
       } catch (err) {
@@ -62,7 +65,8 @@ module.exports = {
     return async (req, res, next) => {
       try {
         if (req.authError) throw req.authError;
-        if (!req.user) throw new AppError('User does not exist', errorTypes.AUTHORIZATION, 401);
+        if (!req.user)
+          throw new AppError('User does not exist or was deleted.', errorTypes.AUTHORIZATION, 401);
         if (!req.user.emailConfirmed)
           throw new AppError('Please confirm your account!', errorTypes.AUTHORIZATION, 403);
 
