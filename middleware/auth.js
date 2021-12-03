@@ -30,8 +30,8 @@ module.exports = async (req, res, next) => {
 
       if (!req.authError) req.user = user;
     }
-  } catch (e) {
-    req.authError = e;
+  } catch (err) {
+    req.authError = err;
   }
 
   next();
