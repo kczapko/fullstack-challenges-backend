@@ -17,15 +17,27 @@ class Email {
   }
 
   #createTransporter() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.DEV_MAIL_HOST,
-      port: process.env.DEV_MAIL_PORT,
-      secure: process.env.DEV_MAIL_SECURE === 'true',
-      auth: {
-        user: process.env.DEV_MAIL_USER,
-        pass: process.env.DEV_MAIL_PASS,
-      },
-    });
+    if (process.env.NODE_ENV === 'production') {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.PROD_MAIL_HOST,
+        port: process.env.PROD_MAIL_PORT,
+        secure: process.env.PROD_MAIL_SECURE === 'true',
+        auth: {
+          user: process.env.PROD_MAIL_USER,
+          pass: process.env.PROD_MAIL_PASS,
+        },
+      });
+    } else {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.DEV_MAIL_HOST,
+        port: process.env.DEV_MAIL_PORT,
+        secure: process.env.DEV_MAIL_SECURE === 'true',
+        auth: {
+          user: process.env.DEV_MAIL_USER,
+          pass: process.env.DEV_MAIL_PASS,
+        },
+      });
+    }
   }
 
   #compileTemplate() {

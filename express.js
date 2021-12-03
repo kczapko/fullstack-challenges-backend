@@ -1,3 +1,5 @@
+const path = require('path');
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -14,20 +16,27 @@ const filesRoutes = require('./routes/files');
 
 const app = express();
 
+app.set('trust proxy', true);
+
 app.use(express.static('public'));
 app.use(express.json());
 app.use(mongoSanitize());
-app.use(
-  cors({
-    origin: [
-      'http://localhost:8080',
-      'https://localhost:8080',
-      'http://127.0.0.1:8080',
-      'https://127.0.0.1:8080',
-      'http://127.0.0.1:5500',
-    ],
-  }),
-);
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(
+    cors({
+      origin: [
+        'http://localhost:8080',
+        'https://localhost:8080',
+        'http://127.0.0.1:8080',
+        'https://127.0.0.1:8080',
+        'http://127.0.0.1:5500',
+      ],
+    }),
+  );
+} else {
+  app.use(cors());
+}
 
 app.use(auth);
 
@@ -43,7 +52,26 @@ app.use(
 
 app.use('/files', filesRoutes);
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        'script-src': [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          'https://accounts.google.com/gsi/client',
+          'https://connect.facebook.net/en_US/sdk.js',
+        ],
+      },
+    },
+  }),
+);
+
+app.use((req, res, next) => {
+  res.status(200).sendFile('index.html', { root: path.join(__dirname, 'views') });
+});
 
 app.use(globalErrorHandler);
 
