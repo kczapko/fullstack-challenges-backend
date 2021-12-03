@@ -5,7 +5,7 @@ const User = require('../../models/user');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
-const { createUserPhoto, deleteFile } = require('../../utils/files');
+const { createUserPhoto, deleteFile, deleteDir } = require('../../utils/files');
 const { publicPath } = require('../../utils/path');
 
 module.exports = {
@@ -92,6 +92,9 @@ module.exports = {
       try {
         if (!(await req.user.comparePassword(password)))
           throw new AppError('Wrong password', errorTypes.VALIDATION, 400);
+
+        const dir = await req.user.getImagesDirectory();
+        await deleteDir(dir);
 
         await req.user.remove();
         return true;
