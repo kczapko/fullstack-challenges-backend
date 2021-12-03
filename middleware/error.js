@@ -1,6 +1,5 @@
-const multer = require('multer');
-
 const AppError = require('../utils/AppError');
+const formatError = require('../utils/formatError');
 
 module.exports = (error, req, res, next) => {
   console.error(`🎃🎃🎃 EXPRESS ERROR START 🎃🎃🎃`);
@@ -14,9 +13,5 @@ module.exports = (error, req, res, next) => {
     return res.status(status).json({ message: error.message, error });
   }
 
-  let message = 'Internal server error';
-  if (error instanceof AppError) message = error.message;
-  if (error instanceof multer.MulterError) message = error.message;
-
-  res.status(500).json({ message });
+  res.status(500).json(formatError(error));
 };

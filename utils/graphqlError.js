@@ -20,5 +20,7 @@ module.exports = (error) => {
     };
   }
 
-  return formatError(error);
+  return error.originalError
+    ? formatError(error.originalError, true)
+    : { message: 'GraphQL Error' };
 };

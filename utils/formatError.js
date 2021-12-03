@@ -1,3 +1,5 @@
+const multer = require('multer');
+
 const AppError = require('./AppError');
 const errorTypes = require('./errorTypes');
 
@@ -21,18 +23,15 @@ const handleWebTokenError = (err) => new AppError('Wrong token', errorTypes.AUTH
 const handleWebTokenExpiredError = (err) =>
   new AppError('Token expired', errorTypes.AUTHENTICATION, 401);
 
-module.exports = (error) => {
+module.exports = (error, graphqlError = false) => {
   let err;
 
-  if (error.originalError) {
-    const e = error.originalError;
+  if (error instanceof AppError) err = error;
+  if (error.name === 'ValidationError') err = handleDBValidationError(error);
+  if (error.code === 11000 && e.name === 'MongoServerError') err = handleDBDuplicateKeyError(error);
+  if (error.name === 'JsonWebTokenError') err = handleWebTokenError(error);
+  if (error.name === 'TokenExpiredError') err = handleWebTokenExpiredError(error);
+  if (error instanceof multer.MulterError) err = error;
 
-    if (e instanceof AppError) err = e;
-    if (e.name === 'ValidationError') err = handleDBValidationError(e);
-    if (e.code === 11000 && e.name === 'MongoServerError') err = handleDBDuplicateKeyError(e);
-    if (e.name === 'JsonWebTokenError') err = handleWebTokenError(e);
-    if (e.name === 'TokenExpiredError') err = handleWebTokenExpiredError(e);
-  }
-
-  return { message: err ? err.message : error.message };
+  return { message: err ? err.message : graphqlError ? 'GraphQL Error' : 'Internal server error' };
 };
