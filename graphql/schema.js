@@ -14,19 +14,17 @@ const schema = buildSchema(`
 
   type UserPublic {
     email: String!
-    role: String!
     name: String
     photo: String
-    emailConfirmed: Boolean!
   }
 
   type AuthData {
     token: String!
-    user: UserPublic!
+    user: User!
   }
 
   type UserData {
-    user: UserPublic!
+    user: User!
   }
 
   type GithubAuthData {
@@ -86,6 +84,8 @@ const schema = buildSchema(`
     changeMyEmail(email: String!): Boolean!
     cancelMyNewEmail: Boolean!
     confirmMyNewEmail(currentEmailToken: String!, newEmailtoken: String!): User!
+    changeMyPhoto(imageUrl: String!): User!
+    deleteMyPhoto: Boolean!
     deleteMyAccount(password: String!): Boolean!
   }
 

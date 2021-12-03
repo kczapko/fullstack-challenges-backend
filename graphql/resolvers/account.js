@@ -1,9 +1,12 @@
 const validator = require('validator');
+const axios = require('axios');
 
 const User = require('../../models/user');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
+const { createUserPhoto, deleteFile } = require('../../utils/files');
+const { publicPath } = require('../../utils/path');
 
 module.exports = {
   confirmEmail: async ({ token }, req) => {
@@ -136,6 +139,59 @@ module.exports = {
     if (req.user) {
       try {
         await req.user.changeEmail(currentEmailToken, newEmailtoken);
+        return req.user;
+      } catch (e) {
+        throw e;
+      }
+    }
+  },
+  deleteMyPhoto: async (args, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        if (req.user.photo) {
+          await deleteFile(req.user.photo);
+          await deleteFile(req.user.photo.replace('.webp', '.png'));
+
+          req.user.photo = undefined;
+          await req.user.save();
+        }
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    }
+    return false;
+  },
+  changeMyPhoto: async ({ imageUrl }, req) => {
+    if (req.authError) throw req.authError;
+    if (req.user) {
+      try {
+        if (
+          !validator.isURL(imageUrl, { protocols: ['http', 'https'], require_protocol: true }) ||
+          (!imageUrl.endsWith('.jpg') && !imageUrl.endsWith('.png') && !imageUrl.endsWith('.webp'))
+        )
+          throw new AppError(
+            'Not valid photo url. Only http:// and https:// protocols and .jpg, .png and .webp files are allowed.',
+            errorTypes.VALIDATION,
+            400,
+          );
+
+        const res = await axios.get(imageUrl, {
+          responseType: 'arraybuffer',
+        });
+
+        const dir = await req.user.getImagesDirectory();
+        const filename = await createUserPhoto(res.data, dir);
+
+        if (req.user.photo) {
+          await deleteFile(req.user.photo);
+          await deleteFile(req.user.photo.replace('.webp', '.png'));
+        }
+
+        req.user.photo = `/${publicPath(filename).replaceAll('\\', '/')}`;
+        await req.user.save();
+
         return req.user;
       } catch (e) {
         throw e;

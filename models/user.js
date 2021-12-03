@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs/promises');
 
 const mongoose = require('mongoose');
 const validator = require('validator');
@@ -7,6 +9,7 @@ const bcrypt = require('bcryptjs');
 const { VerificationEmail, PasswordResetEmail } = require('../utils/emails');
 const AppError = require('../utils/AppError');
 const errorTypes = require('../utils/errorTypes');
+const { baseDir } = require('../utils/path');
 
 const generateToken = () => {
   return crypto.randomBytes(32).toString('hex');
@@ -104,6 +107,11 @@ const userSchema = new mongoose.Schema(
     photo: {
       type: String,
       maxlength: [200, 'Maximum photo url length is 200 characters.'],
+      get(v) {
+        if (!v) return;
+        if (v.startsWith('http') || v.startsWith('https')) return v;
+        return `${process.env.SERVER_URL}${v}`;
+      },
     },
     newEmail: {
       type: String,
@@ -205,6 +213,16 @@ userSchema.methods.sendPasswordResetToken = async function () {
 
 userSchema.statics.getTokenHash = function (token) {
   return hashToken(token);
+};
+
+userSchema.methods.getImagesDirectory = async function () {
+  const dir = path.join(baseDir, 'public', 'images', 'user', this._id.toString());
+  try {
+    await fs.mkdir(dir, { recursive: true });
+  } catch (e) {
+    throw e;
+  }
+  return dir;
 };
 
 userSchema.pre('save', function (next) {

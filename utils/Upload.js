@@ -31,9 +31,7 @@ class Upload {
   }
 
   #createStorage() {
-    if (this.#storage === 'memeory') {
-      return multer.memoryStorage();
-    }
+    return multer.memoryStorage();
   }
 
   #fileFilter() {
