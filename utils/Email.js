@@ -10,7 +10,10 @@ class Email {
     this.subject = subject;
     this.to = to;
     this.data = data;
+
     this.data.subject = subject;
+    this.data.APP_URL = process.env.APP_URL;
+    this.data.SERVER_URL = process.env.SERVER_URL;
 
     this.#compileTemplate();
     this.#createTransporter();
