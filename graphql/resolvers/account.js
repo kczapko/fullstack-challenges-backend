@@ -50,6 +50,10 @@ module.exports = {
       );
     }
 
+    /* demo user */
+    if (req.user.email === 'demo@demo.demo')
+      throw new AppError("You can't change password for demo user", errorTypes.VALIDATION, 400);
+
     req.user.password = password;
     req.user.passwordConfirm = passwordConfirm;
     await req.user.save();
@@ -59,6 +63,10 @@ module.exports = {
   deleteMyAccount: catchGraphqlConfimed(async ({ password }, req) => {
     if (!(await req.user.comparePassword(password)))
       throw new AppError('Wrong password', errorTypes.VALIDATION, 400);
+
+    /* demo user */
+    if (req.user.email === 'demo@demo.demo')
+      throw new AppError("You can't delete demo user", errorTypes.VALIDATION, 400);
 
     const dir = await req.user.getImagesDirectory();
     await deleteDir(dir);
@@ -70,6 +78,10 @@ module.exports = {
   changeMyEmail: catchGraphqlConfimed(async ({ email }, req) => {
     if (await User.findOne({ email }))
       throw new AppError('User with this e-mail already exists', errorTypes.VALIDATION, 400);
+
+    /* demo user */
+    if (req.user.email === 'demo@demo.demo')
+      throw new AppError("You can't change email for demo user", errorTypes.VALIDATION, 400);
 
     req.user.newEmail = email;
     await req.user.save();
@@ -87,6 +99,10 @@ module.exports = {
     return true;
   }),
   confirmMyNewEmail: catchGraphqlConfimed(async ({ currentEmailToken, newEmailtoken }, req) => {
+    /* demo user */
+    if (req.user.email === 'demo@demo.demo')
+      throw new AppError("You can't change email for demo user", errorTypes.VALIDATION, 400);
+
     await req.user.changeEmail(currentEmailToken, newEmailtoken);
     return req.user;
   }),
