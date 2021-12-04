@@ -3,4 +3,5 @@ module.exports = {
   AUTHORIZATION: 'authorization',
   VALIDATION: 'validation',
   DATABASE: 'database',
+  MAIL: 'mail',
 };

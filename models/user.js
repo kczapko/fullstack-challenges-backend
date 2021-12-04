@@ -250,11 +250,22 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-userSchema.post('save', async function () {
+userSchema.post('save', async function (doc) {
   if (!this.wasNew) return;
   this.wasNew = false;
 
-  await this.sendVerificationEmail();
+  try {
+    await this.sendVerificationEmail();
+  } catch (err) {
+    if (err.code === 'EENVELOPE' && err.responseCode === 550) {
+      await doc.remove();
+      throw new AppError(
+        `It looks like ${err.rejected[0]} does not exist. Account creation cancelled.`,
+        errorTypes.VALIDATION,
+        400,
+      );
+    }
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);

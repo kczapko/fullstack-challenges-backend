@@ -23,6 +23,14 @@ const handleWebTokenError = (err) => new AppError('Wrong token', errorTypes.AUTH
 const handleWebTokenExpiredError = (err) =>
   new AppError('Token expired', errorTypes.AUTHENTICATION, 401);
 
+const handleMailSendError = (err) => {
+  throw new AppError(
+    `It looks like ${err.rejected.join(' ')} does not exist.`,
+    errorTypes.MAIL,
+    400,
+  );
+};
+
 module.exports = (error, graphqlError = false) => {
   let err;
 
@@ -32,6 +40,9 @@ module.exports = (error, graphqlError = false) => {
   if (error.name === 'JsonWebTokenError') err = handleWebTokenError(error);
   if (error.name === 'TokenExpiredError') err = handleWebTokenExpiredError(error);
   if (error instanceof multer.MulterError) err = error;
+  if (error.code === 'EENVELOPE' && error.responseCode === 550) err = handleMailSendError(error);
 
-  return { message: err ? err.message : graphqlError ? 'GraphQL Error' : 'Internal server error' };
+  return {
+    message: err ? err.message : 'Internal server error',
+  };
 };
