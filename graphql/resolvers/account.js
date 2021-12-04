@@ -140,7 +140,7 @@ module.exports = {
       await deleteFile(req.user.photo.replace('.webp', '.png'));
     }
 
-    req.user.photo = `/${publicPath(filename).replaceAll('\\', '/')}`;
+    req.user.photo = `/${publicPath(filename).replace(/\\/g, '/')}`;
     await req.user.save();
 
     return req.user;
