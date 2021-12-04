@@ -23,13 +23,8 @@ const handleWebTokenError = (err) => new AppError('Wrong token', errorTypes.AUTH
 const handleWebTokenExpiredError = (err) =>
   new AppError('Token expired', errorTypes.AUTHENTICATION, 401);
 
-const handleMailSendError = (err) => {
-  throw new AppError(
-    `It looks like ${err.rejected.join(' ')} does not exist.`,
-    errorTypes.MAIL,
-    400,
-  );
-};
+const handleMailSendError = (err) =>
+  new AppError(`It looks like ${err.rejected.join(' ')} does not exist.`, errorTypes.MAIL, 400);
 
 module.exports = (error, graphqlError = false) => {
   let err;
