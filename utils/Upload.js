@@ -37,7 +37,7 @@ class Upload {
   #fileFilter() {
     return (req, file, cb) => {
       if (!this.#mimetypes.length) return cb(null, true);
-      if (!this.#mimetypes.some((mimetype) => file.mimetype === mimetype))
+      if (!this.#mimetypes.includes(file.mimetype))
         return cb(new AppError('Wrong file type', errorTypes.VALIDATION, 400), false);
       cb(null, true);
     };

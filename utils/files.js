@@ -33,7 +33,7 @@ exports.deleteDir = async (dir) => {
   try {
     await fs.rm(dir, { recursive: true, force: true });
   } catch (err) {
-    console.error(`💩 Problem with deleteing dircetory ${absolutePath(publicPath)}`);
+    console.error(`💩 Problem with deleteing dircetory ${dir}`);
     console.error(err);
   }
 };

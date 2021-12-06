@@ -38,8 +38,11 @@ module.exports = {
     }
 
     if (!(await user.comparePassword(password))) {
-      await user.set({ loginAttempts: user.loginAttempts + 1 });
-      await user.save();
+      /* demo user */
+      if (user.email !== 'demo@demo.demo') {
+        await user.set({ loginAttempts: user.loginAttempts + 1 });
+        await user.save();
+      }
 
       throw new AppError('Wrong email or password.', errorTypes.AUTHENTICATION, 401);
     }
