@@ -76,7 +76,7 @@ const schema = buildSchema(`
     authWithTwitter: String!
     authWithGithub: GithubAuthData!
     me: User!
-    myUnsplashImages: [Image!]!
+    myUnsplashImages(search: String): [Image!]!
   }
 
   type RootMutation {

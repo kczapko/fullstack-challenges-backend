@@ -47,8 +47,11 @@ module.exports = {
 
     return image;
   }),
-  myUnsplashImages: catchGraphqlConfimed(async (args, req) => {
+  myUnsplashImages: catchGraphqlConfimed(async ({ search }, req) => {
     const imagesQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
+
+    if (search) imagesQuery.find({ $text: { $search: search } });
+
     const images = await imagesQuery;
     return images;
   }),
