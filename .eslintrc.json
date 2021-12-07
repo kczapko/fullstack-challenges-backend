@@ -13,6 +13,7 @@
     "prettier/prettier": "error",
     "no-console": "off",
     "nonblock-statement-body-position": "off",
-    "curly": ["error", "multi"]
+    "curly": ["error", "multi"],
+    "func-names": ["error", "never"]
   }
 }

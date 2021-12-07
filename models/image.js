@@ -4,8 +4,17 @@ const imageSchema = new mongoose.Schema(
   {
     path: {
       type: String,
-      required: [true, 'Image must have a path'],
-      maxlength: [200, 'Maximum image path length is 200 characters.'],
+      required: [true, 'Image must have a path.'],
+      maxlength: [100, 'Maximum image path length is 100 characters.'],
+      get(v) {
+        if (!v) return null;
+        return `${process.env.SERVER_URL}${v}`;
+      },
+    },
+    source: {
+      type: String,
+      required: [true, 'Image must have a source url.'],
+      maxlength: [200, 'Maximum image source url is 200 characters.'],
     },
     width: {
       type: Number,
@@ -17,6 +26,7 @@ const imageSchema = new mongoose.Schema(
     },
     label: {
       type: String,
+      required: [true, 'Image must have a label.'],
       maxlength: [200, 'Maximum image label is 200 characters.'],
     },
     user: {

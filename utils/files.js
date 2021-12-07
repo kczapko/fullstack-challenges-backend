@@ -20,6 +20,23 @@ exports.createUserPhoto = async (buffer, dir) => {
   return filename;
 };
 
+exports.createUnsplashImage = async (buffer, dir) => {
+  let image = sharp(buffer);
+  const metadata = await image.metadata();
+  const { width } = metadata;
+
+  if (width > 960)
+    image = image.resize({
+      width: 960,
+    });
+
+  const name = `unsplash-${Date.now()}-${Math.random().toString().slice(2)}`;
+  const filename = path.join(dir, `${name}.webp`);
+  const file = await image.webp({ quality: 80 }).toFile(filename);
+
+  return { filename, width: file.width, height: file.height };
+};
+
 exports.deleteFile = async (publicPath) => {
   try {
     await fs.unlink(absolutePath(publicPath));

@@ -18,6 +18,15 @@ const schema = buildSchema(`
     photo: String
   }
 
+  type Image {
+    _id: ID!
+    path: String!
+    source: String!
+    width: Int!
+    height: Int!
+    label: String!
+  }
+
   type AuthData {
     token: String!
     user: User!
@@ -87,6 +96,7 @@ const schema = buildSchema(`
     changeMyPhoto(imageUrl: String!): User!
     deleteMyPhoto: Boolean!
     deleteMyAccount(password: String!): Boolean!
+    addUnsplashImage(label: String!, imageUrl: String!): Image!
   }
 
   schema {

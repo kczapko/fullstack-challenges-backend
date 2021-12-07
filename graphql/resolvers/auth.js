@@ -11,9 +11,7 @@ const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
 const { catchGraphql, catchGraphqlAuth } = require('../../utils/catchAsync');
 
-const generatePassword = () => {
-  return crypto.randomBytes(32).toString('hex');
-};
+const generatePassword = () => crypto.randomBytes(32).toString('hex');
 
 module.exports = {
   login: catchGraphql(async ({ loginInput }) => {
@@ -21,21 +19,17 @@ module.exports = {
 
     const user = await User.findOne({ email });
 
-    if (!user) {
-      throw new AppError('Wrong email or password.', errorTypes.AUTHENTICATION, 404);
-    }
+    if (!user) throw new AppError('Wrong email or password.', errorTypes.AUTHENTICATION, 404);
 
-    if (user.blocked) {
+    if (user.blocked)
       throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
-    }
 
-    if (user.loginAttempts >= process.env.MAX_LOGIN_ATTEMPTS) {
+    if (user.loginAttempts >= process.env.MAX_LOGIN_ATTEMPTS)
       throw new AppError(
         'Maximum login attempts reached! Please reset your password.',
         errorTypes.AUTHENTICATION,
         401,
       );
-    }
 
     if (!(await user.comparePassword(password))) {
       /* demo user */
@@ -49,6 +43,8 @@ module.exports = {
 
     await user.set({ loginAttempts: 0 });
     await user.save();
+
+    // eslint-disable-next-line no-underscore-dangle
     const token = await generateToken({ id: user._id });
 
     return {
@@ -56,29 +52,29 @@ module.exports = {
       user,
     };
   }),
-  autologin: catchGraphqlAuth(async (args, req) => {
-    return { user: req.user };
-  }),
+  autologin: catchGraphqlAuth(async (args, req) => ({ user: req.user })),
   signup: catchGraphql(async ({ signupInput }) => {
     const { email, password, passwordConfirm } = signupInput;
 
     if (
+      // eslint-disable-next-line operator-linebreak
       !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
-      !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
-    ) {
+      !validator.isLength(passwordConfirm, {
+        max: process.env.MAX_PASSWORD_LENGTH,
+      })
+    )
       throw new AppError(
         `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
         errorTypes.VALIDATION,
         400,
       );
-    }
 
     let user = await User.findOne({ email });
-    if (user) {
-      throw new AppError(`User with that email already exists.`, errorTypes.VALIDATION, 400);
-    }
+    if (user)
+      throw new AppError('User with that email already exists.', errorTypes.VALIDATION, 400);
 
     user = await User.create({ email, password, passwordConfirm });
+    // eslint-disable-next-line no-underscore-dangle
     const token = await generateToken({ id: user._id });
 
     return {
@@ -89,25 +85,23 @@ module.exports = {
   signinWithGoogle: catchGraphql(async ({ idToken }) => {
     const client = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT);
 
-    //1. Verify token
+    // 1. Verify token
     const ticket = await client.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_OAUTH_CLIENT,
     });
     const payload = ticket.getPayload();
 
-    if (!payload.email_verified) {
+    if (!payload.email_verified)
       throw new AppError('Please verify your google email first.', errorTypes.VALIDATION, 403);
-    }
 
-    //2. Check if user exists
+    // 2. Check if user exists
     let user = await User.findOne({ email: payload.email });
 
-    if (user && user.blocked) {
+    if (user && user.blocked)
       throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
-    }
 
-    //2a Create new account
+    // 2a Create new account
     if (!user) {
       const password = generatePassword();
 
@@ -120,7 +114,8 @@ module.exports = {
       });
     }
 
-    //3 Send auth data
+    // 3 Send auth data
+    // eslint-disable-next-line no-underscore-dangle
     const token = await generateToken({ id: user._id });
 
     return {
@@ -157,16 +152,15 @@ module.exports = {
       `https://graph.facebook.com/${debugToken.user_id}?fields=id,name,email,picture&access_token=${accessToken}`,
     );
 
-    const data = res.data;
+    const { data } = res;
 
-    //4. Check if user exists
+    // 4. Check if user exists
     let user = await User.findOne({ email: data.email });
 
-    if (user && user.blocked) {
+    if (user && user.blocked)
       throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
-    }
 
-    //4a Create new account
+    // 4a Create new account
     if (!user) {
       const password = generatePassword();
 
@@ -179,7 +173,8 @@ module.exports = {
       });
     }
 
-    //5 Send auth data
+    // 5 Send auth data
+    // eslint-disable-next-line no-underscore-dangle
     const token = await generateToken({ id: user._id });
 
     return {
@@ -194,23 +189,23 @@ module.exports = {
         secret: process.env.TWITTER_API_KEY_SECRET,
       },
       signature_method: 'HMAC-SHA1',
-      hash_function(base_string, key) {
-        return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+      hash_function(baseString, key) {
+        return crypto.createHmac('sha1', key).update(baseString).digest('base64');
       },
     });
 
-    const request_data = {
+    const requestData = {
       url: `https://api.twitter.com/oauth/request_token?oauth_callback=${encodeURIComponent(
         process.env.TWITTER_CALLBACK_URL,
       )}`,
       method: 'POST',
     };
 
-    const headers = oauth.toHeader(oauth.authorize(request_data));
+    const headers = oauth.toHeader(oauth.authorize(requestData));
 
     const res = await axios({
-      url: request_data.url,
-      method: request_data.method,
+      url: requestData.url,
+      method: requestData.method,
       headers,
     });
 
@@ -231,41 +226,39 @@ module.exports = {
         secret: process.env.TWITTER_API_KEY_SECRET,
       },
       signature_method: 'HMAC-SHA1',
-      hash_function(base_string, key) {
-        return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+      hash_function(baseString, key) {
+        return crypto.createHmac('sha1', key).update(baseString).digest('base64');
       },
     });
 
-    const request_data = {
-      url: `https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true`,
+    const requestData = {
+      url: 'https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true',
       method: 'GET',
     };
 
     const headers = oauth.toHeader(
-      oauth.authorize(request_data, {
+      oauth.authorize(requestData, {
         key: access.oauth_token,
         secret: access.oauth_token_secret,
       }),
     );
 
     res = await axios({
-      url: request_data.url,
-      method: request_data.method,
+      url: requestData.url,
+      method: requestData.method,
       headers,
     });
 
-    const data = res.data;
+    const { data } = res;
 
-    if (data.suspended) {
+    if (data.suspended)
       throw new AppError('Your twitter account is suspended.', errorTypes.VALIDATION, 403);
-    }
 
     // Check if user exists
     let user = await User.findOne({ email: data.email });
 
-    if (user && user.blocked) {
+    if (user && user.blocked)
       throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
-    }
 
     // Create new account
     if (!user) {
@@ -281,7 +274,8 @@ module.exports = {
       });
     }
 
-    //Send auth data
+    // Send auth data
+    // eslint-disable-next-line no-underscore-dangle
     const token = await generateToken({ id: user._id });
 
     return {
@@ -294,7 +288,7 @@ module.exports = {
 
     return {
       url: `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&state=${state}&scope=read:user%20user:email`,
-      state: state,
+      state,
     };
   },
   signinWithGithub: catchGraphql(async ({ code }) => {
@@ -304,7 +298,7 @@ module.exports = {
       params: {
         client_id: process.env.GITHUB_CLIENT_ID,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
-        code: code,
+        code,
       },
       headers: { Accept: 'application/json' },
     });
@@ -319,22 +313,20 @@ module.exports = {
       },
     });
 
-    const data = res.data;
+    const { data } = res;
 
-    if (!data.email) {
+    if (!data.email)
       throw new AppError(
         "You don't have public email set on yout github profile.",
         errorTypes.VALIDATION,
         403,
       );
-    }
 
     // Check if user exists
     let user = await User.findOne({ email: data.email });
 
-    if (user && user.blocked) {
+    if (user && user.blocked)
       throw new AppError('Your account has been blocked.', errorTypes.AUTHENTICATION, 403);
-    }
 
     // Create new account
     if (!user) {
@@ -350,7 +342,8 @@ module.exports = {
       });
     }
 
-    //Send auth data
+    // Send auth data
+    // eslint-disable-next-line no-underscore-dangle
     const token = await generateToken({ id: user._id });
 
     return {
@@ -369,22 +362,24 @@ module.exports = {
     const { token, password, passwordConfirm } = args.changePasswordInput;
 
     if (
+      // eslint-disable-next-line operator-linebreak
       !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
-      !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
-    ) {
+      !validator.isLength(passwordConfirm, {
+        max: process.env.MAX_PASSWORD_LENGTH,
+      })
+    )
       throw new AppError(
         `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
         errorTypes.VALIDATION,
         400,
       );
-    }
 
     const user = await User.findOne({
       passwordResetToken: User.getTokenHash(token),
       passwordResetTokenExpires: { $gte: new Date() },
     });
 
-    if (!user) throw new AppError(`Wrong token or token expired`, errorTypes.VALIDATION, 400);
+    if (!user) throw new AppError('Wrong token or token expired', errorTypes.VALIDATION, 400);
 
     user.password = password;
     user.passwordConfirm = passwordConfirm;

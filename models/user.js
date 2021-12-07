@@ -11,13 +11,8 @@ const AppError = require('../utils/AppError');
 const errorTypes = require('../utils/errorTypes');
 const { baseDir } = require('../utils/path');
 
-const generateToken = () => {
-  return crypto.randomBytes(32).toString('hex');
-};
-
-const hashToken = (token) => {
-  return crypto.createHash('sha256').update(token).digest().toString('hex');
-};
+const generateToken = () => crypto.randomBytes(32).toString('hex');
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest().toString('hex');
 
 const userSchema = new mongoose.Schema(
   {
@@ -75,11 +70,9 @@ const userSchema = new mongoose.Schema(
       maxlength: [100, 'Name maximum length is 100 characters.'],
       validate: {
         validator(val) {
-          if (val) {
-            return validator.isAlphaLocales.some((locale) =>
-              validator.isAlpha(val, locale, { ignore: ' ' }),
-            );
-          }
+          if (val)
+            // prettier-ignore
+            return validator.isAlphaLocales.some((locale) => validator.isAlpha(val, locale, { ignore: ' ' }));
           return true;
         },
         message: 'Name can contain only alphabetical characters and spaces.',
@@ -96,9 +89,7 @@ const userSchema = new mongoose.Schema(
       maxlength: [50, 'Maximum phone number length is 50 characters.'],
       validate: {
         validator(val) {
-          if (val) {
-            return validator.isMobilePhone(val);
-          }
+          if (val) return validator.isMobilePhone(val);
           return true;
         },
         message: 'Invalid phone number.',
@@ -108,7 +99,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxlength: [200, 'Maximum photo url length is 200 characters.'],
       get(v) {
-        if (!v) return;
+        if (!v) return null;
         if (v.startsWith('http') || v.startsWith('https')) return v;
         return `${process.env.SERVER_URL}${v}`;
       },
@@ -139,25 +130,18 @@ userSchema.methods.sendVerificationEmail = async function (
   newEmail = false,
 ) {
   const token = generateToken();
-  const email = new VerificationEmail(emailAddress ? emailAddress : this.email, {
+  const email = new VerificationEmail(emailAddress || this.email, {
     name: this.name || this.email,
     token,
     changed,
     newEmail,
   });
 
-  try {
-    if (newEmail) {
-      this.newEmailConfirmationToken = hashToken(token);
-    } else {
-      this.emailConfirmationToken = hashToken(token);
-    }
-    await this.save();
+  if (newEmail) this.newEmailConfirmationToken = hashToken(token);
+  else this.emailConfirmationToken = hashToken(token);
 
-    await email.send();
-  } catch (e) {
-    throw e;
-  }
+  await this.save();
+  await email.send();
 };
 
 userSchema.methods.verifyEmail = async function (token) {
@@ -166,12 +150,7 @@ userSchema.methods.verifyEmail = async function (token) {
   this.emailConfirmed = true;
   this.emailConfirmationToken = undefined;
 
-  try {
-    await this.save();
-  } catch (e) {
-    throw e;
-  }
-
+  await this.save();
   return true;
 };
 
@@ -182,15 +161,11 @@ userSchema.methods.changeEmail = async function (currentEmailToken, newEmailtoke
   if (this.newEmailConfirmationToken !== hashToken(newEmailtoken))
     throw new AppError('Wrong new e-mail token', errorTypes.VALIDATION, 400);
 
-  try {
-    this.email = this.newEmail;
-    this.newEmail = undefined;
-    this.emailConfirmationToken = undefined;
-    this.newEmailConfirmationToken = undefined;
-    await this.save();
-  } catch (e) {
-    throw e;
-  }
+  this.email = this.newEmail;
+  this.newEmail = undefined;
+  this.emailConfirmationToken = undefined;
+  this.newEmailConfirmationToken = undefined;
+  await this.save();
 };
 
 userSchema.methods.sendPasswordResetToken = async function () {
@@ -201,14 +176,10 @@ userSchema.methods.sendPasswordResetToken = async function () {
     url: `${process.env.APP_URL}/change-password`,
   });
 
-  try {
-    this.passwordResetToken = hashToken(token);
-    this.passwordResetTokenExpires = Date.now() + 60 * 60 * 1000; //1 hour
-    await this.save();
-    await email.send();
-  } catch (e) {
-    throw e;
-  }
+  this.passwordResetToken = hashToken(token);
+  this.passwordResetTokenExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+  await this.save();
+  await email.send();
 };
 
 userSchema.statics.getTokenHash = function (token) {
@@ -216,12 +187,10 @@ userSchema.statics.getTokenHash = function (token) {
 };
 
 userSchema.methods.getImagesDirectory = async function () {
+  // eslint-disable-next-line no-underscore-dangle
   const dir = path.join(baseDir, 'public', 'images', 'user', this._id.toString());
-  try {
-    await fs.mkdir(dir, { recursive: true });
-  } catch (e) {
-    throw e;
-  }
+
+  await fs.mkdir(dir, { recursive: true });
   return dir;
 };
 
@@ -229,25 +198,21 @@ userSchema.pre('save', function (next) {
   if (!this.isNew) return next();
 
   this.wasNew = true;
-  next();
+  return next();
 });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
-  try {
-    this.password = await bcrypt.hash(this.password, 13);
-    this.passwordConfirm = undefined;
-    if (!this.isNew) {
-      this.passwordChangedAt = new Date();
-      this.passwordResetToken = undefined;
-      this.passwordResetTokenExpires = undefined;
-    }
-  } catch (e) {
-    throw e;
+  this.password = await bcrypt.hash(this.password, 13);
+  this.passwordConfirm = undefined;
+  if (!this.isNew) {
+    this.passwordChangedAt = new Date();
+    this.passwordResetToken = undefined;
+    this.passwordResetTokenExpires = undefined;
   }
 
-  next();
+  return next();
 });
 
 userSchema.post('save', async function (doc) {

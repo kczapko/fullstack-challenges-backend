@@ -1,6 +1,8 @@
 const validator = require('validator');
 const axios = require('axios');
 
+const { fromBuffer } = require('file-type');
+
 const User = require('../../models/user');
 
 const AppError = require('../../utils/AppError');
@@ -18,9 +20,7 @@ module.exports = {
     await req.user.sendVerificationEmail();
     return true;
   }),
-  me: catchGraphqlConfimed(async (args, req) => {
-    return req.user;
-  }),
+  me: catchGraphqlConfimed(async (args, req) => req.user),
   changeMyData: catchGraphqlConfimed(async (args, req) => {
     const { name, bio, phone } = args.userDataInput;
 
@@ -40,15 +40,15 @@ module.exports = {
       throw new AppError('Wrong current password', errorTypes.VALIDATION, 400);
 
     if (
+      // eslint-disable-next-line operator-linebreak
       !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
       !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
-    ) {
+    )
       throw new AppError(
         `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
         errorTypes.VALIDATION,
         400,
       );
-    }
 
     /* demo user */
     if (req.user.email === 'demo@demo.demo')
@@ -90,7 +90,7 @@ module.exports = {
 
     return true;
   }),
-  cancelMyNewEmail: catchGraphqlConfimed(async ({ email }, req) => {
+  cancelMyNewEmail: catchGraphqlConfimed(async (args, req) => {
     req.user.newEmail = undefined;
     req.user.emailConfirmationToken = undefined;
     req.user.newEmailConfirmationToken = undefined;
@@ -119,6 +119,7 @@ module.exports = {
   }),
   changeMyPhoto: catchGraphqlConfimed(async ({ imageUrl }, req) => {
     if (
+      // eslint-disable-next-line operator-linebreak
       !validator.isURL(imageUrl, { protocols: ['http', 'https'], require_protocol: true }) ||
       (!imageUrl.endsWith('.jpg') && !imageUrl.endsWith('.png') && !imageUrl.endsWith('.webp'))
     )
@@ -131,6 +132,10 @@ module.exports = {
     const res = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
     });
+
+    const file = await fromBuffer(res.data);
+    if (!file || !['image/jpg', 'image/jpeg', 'image/png', 'image/webp'].includes(file.mime))
+      throw new AppError('Not valid image.', errorTypes.VALIDATION, 400);
 
     const dir = await req.user.getImagesDirectory();
     const filename = await createUserPhoto(res.data, dir);
