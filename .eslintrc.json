@@ -14,6 +14,7 @@
     "no-console": "off",
     "nonblock-statement-body-position": "off",
     "curly": ["error", "multi"],
-    "func-names": ["error", "never"]
+    "func-names": ["error", "never"],
+    "no-unused-vars": ["error", { "argsIgnorePattern": "req|res|next" }]
   }
 }

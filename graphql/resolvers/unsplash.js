@@ -12,7 +12,7 @@ const { publicPath } = require('../../utils/path');
 const { catchGraphqlConfimed } = require('../../utils/catchAsync');
 
 module.exports = {
-  addUnsplashImage: catchGraphqlConfimed(async ({ label, imageUrl }, req) => {
+  addMyUnsplashImage: catchGraphqlConfimed(async ({ label, imageUrl }, req) => {
     if (
       // eslint-disable-next-line operator-linebreak
       !validator.isURL(imageUrl, { protocols: ['http', 'https'], require_protocol: true }) ||
@@ -51,5 +51,27 @@ module.exports = {
     const imagesQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
     const images = await imagesQuery;
     return images;
+  }),
+  editMyUnsplashImage: catchGraphqlConfimed(async ({ id, label }, req) => {
+    const image = await Image.findOne({ _id: id, user: req.user });
+
+    if (!image) throw new AppError('Image not found!', errorTypes.VALIDATION, 400);
+
+    image.set({ label });
+    await image.save();
+
+    return image;
+  }),
+  deleteMyUnsplashImage: catchGraphqlConfimed(async ({ id, password }, req) => {
+    if (!(await req.user.comparePassword(password)))
+      throw new AppError('Wrong password', errorTypes.VALIDATION, 400);
+
+    const image = await Image.findOne({ _id: id, user: req.user });
+
+    if (!image) throw new AppError('Image not found!', errorTypes.VALIDATION, 400);
+
+    await image.remove();
+
+    return image;
   }),
 };

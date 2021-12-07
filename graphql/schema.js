@@ -97,7 +97,9 @@ const schema = buildSchema(`
     changeMyPhoto(imageUrl: String!): User!
     deleteMyPhoto: Boolean!
     deleteMyAccount(password: String!): Boolean!
-    addUnsplashImage(label: String!, imageUrl: String!): Image!
+    addMyUnsplashImage(label: String!, imageUrl: String!): Image!
+    editMyUnsplashImage(id: ID!, label: String!): Image!
+    deleteMyUnsplashImage(id: ID!, password: String!): Image!
   }
 
   schema {
