@@ -41,6 +41,11 @@ const schema = buildSchema(`
     state: String!
   }
 
+  type ImagesData {
+    total: Int!
+    images: [Image!]!
+  }
+
   input SignupInputData {
     email: String!
     password: String!
@@ -76,7 +81,7 @@ const schema = buildSchema(`
     authWithTwitter: String!
     authWithGithub: GithubAuthData!
     me: User!
-    myUnsplashImages(search: String): [Image!]!
+    myUnsplashImages(search: String, page: Int, perPage: Int): ImagesData!
   }
 
   type RootMutation {

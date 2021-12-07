@@ -47,13 +47,27 @@ module.exports = {
 
     return image;
   }),
-  myUnsplashImages: catchGraphqlConfimed(async ({ search }, req) => {
-    const imagesQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
+  myUnsplashImages: catchGraphqlConfimed(async ({ search, page, perPage }, req) => {
+    const usePage = Number(page) || 1;
+    const usePerPage = Number(perPage) || 10;
 
-    if (search) imagesQuery.find({ $text: { $search: search } });
+    const imagesQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
+    const imagesCountQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
+
+    if (search) {
+      imagesQuery.find({ $text: { $search: search } });
+      imagesCountQuery.find({ $text: { $search: search } });
+    }
+
+    const total = await imagesCountQuery.countDocuments();
+    imagesQuery.skip((usePage - 1) * usePerPage).limit(usePerPage);
 
     const images = await imagesQuery;
-    return images;
+
+    return {
+      total,
+      images,
+    };
   }),
   editMyUnsplashImage: catchGraphqlConfimed(async ({ id, label }, req) => {
     const image = await Image.findOne({ _id: id, user: req.user });
