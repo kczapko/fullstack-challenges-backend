@@ -22,7 +22,7 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(mongoSanitize());
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'development')
   app.use(
     cors({
       origin: [
@@ -34,16 +34,14 @@ if (process.env.NODE_ENV === 'development') {
       ],
     }),
   );
-} else {
-  app.use(cors());
-}
+else app.use(cors());
 
 app.use(auth);
 
 app.use(
   '/graphql',
   graphqlHTTP({
-    schema: schema,
+    schema,
     rootValue: resolver,
     graphiql: process.env.NODE_ENV === 'development',
     customFormatErrorFn: graphqlErrorHandler,
@@ -73,8 +71,10 @@ app.use(
           'https://avatars.githubusercontent.com',
           'https://lh3.googleusercontent.com',
         ],
+        frameAncestors: ['https://devchallenges.io'],
       },
     },
+    frameguard: false,
   }),
 );
 
