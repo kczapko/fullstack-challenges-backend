@@ -18,7 +18,7 @@ const app = express();
 
 app.set('trust proxy', true);
 
-app.use(express.static('public'));
+app.use(express.static('public', { maxAge: '1y' }));
 app.use(express.json());
 app.use(mongoSanitize());
 
