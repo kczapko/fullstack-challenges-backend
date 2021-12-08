@@ -48,20 +48,41 @@ module.exports = {
     return image;
   }),
   myUnsplashImages: catchGraphqlConfimed(async ({ search, page, perPage }, req) => {
-    const usePage = Number(page) || 1;
-    const usePerPage = Number(perPage) || 10;
+    const usePage = page > 0 ? page : 1;
+    const usePerPage = perPage > 0 ? perPage : 10;
 
-    const imagesQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
-    const imagesCountQuery = Image.find({ user: req.user }).sort({ createdAt: -1 });
+    const getQuery = () => Image.find({ user: req.user }).sort({ createdAt: -1 });
+
+    let total = -1;
+    let imagesQuery = getQuery();
+    let imagesCountQuery;
+
+    if (page === 1) imagesCountQuery = getQuery();
 
     if (search) {
       imagesQuery.find({ $text: { $search: search } });
-      imagesCountQuery.find({ $text: { $search: search } });
+      if (page === 1) imagesCountQuery.find({ $text: { $search: search } });
+      if (imagesCountQuery) total = await imagesCountQuery.countDocuments();
+
+      if (!total) {
+        let regex;
+        try {
+          regex = new RegExp(search, 'gi');
+        } catch (err) {
+          return {
+            total: 0,
+            images: [],
+          };
+        }
+        imagesQuery = getQuery().find({ label: { $regex: regex } });
+        if (page === 1) imagesCountQuery = getQuery().find({ label: { $regex: regex } });
+        if (imagesCountQuery) total = await imagesCountQuery.countDocuments();
+      }
     }
 
-    const total = await imagesCountQuery.countDocuments();
-    imagesQuery.skip((usePage - 1) * usePerPage).limit(usePerPage);
+    if (imagesCountQuery && !search) total = await imagesCountQuery.countDocuments();
 
+    imagesQuery.skip((usePage - 1) * usePerPage).limit(usePerPage);
     const images = await imagesQuery;
 
     return {

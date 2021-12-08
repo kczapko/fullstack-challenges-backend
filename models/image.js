@@ -31,6 +31,7 @@ const imageSchema = new mongoose.Schema(
       trim: true,
       required: [true, 'Image must have a label.'],
       maxlength: [200, 'Maximum image label is 200 characters.'],
+      index: true,
     },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
