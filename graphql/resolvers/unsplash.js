@@ -51,18 +51,24 @@ module.exports = {
     const usePage = page > 0 ? page : 1;
     const usePerPage = perPage > 0 ? perPage : 10;
 
-    const getQuery = () => Image.find({ user: req.user }).sort({ createdAt: -1 });
+    const getBaseQuery = () => Image.find({ user: req.user }).sort({ createdAt: -1 });
+    const getFullSearchQuery = (searchStr) =>
+      // eslint-disable-next-line implicit-arrow-linebreak
+      getBaseQuery().find({ $text: { $search: searchStr } });
+    const getPartialSearchQuery = (regex) => getBaseQuery().find({ label: { $regex: regex } });
 
     let total = -1;
-    let imagesQuery = getQuery();
+    let imagesQuery;
     let imagesCountQuery;
 
-    if (page === 1) imagesCountQuery = getQuery();
-
-    if (search) {
-      imagesQuery.find({ $text: { $search: search } });
-      if (page === 1) imagesCountQuery.find({ $text: { $search: search } });
-      if (imagesCountQuery) total = await imagesCountQuery.countDocuments();
+    if (!search) {
+      imagesQuery = getBaseQuery();
+      imagesCountQuery = getBaseQuery();
+      total = await imagesCountQuery.countDocuments();
+    } else {
+      imagesQuery = getFullSearchQuery(search);
+      imagesCountQuery = getFullSearchQuery(search);
+      total = await imagesCountQuery.countDocuments();
 
       if (!total) {
         let regex;
@@ -74,13 +80,11 @@ module.exports = {
             images: [],
           };
         }
-        imagesQuery = getQuery().find({ label: { $regex: regex } });
-        if (page === 1) imagesCountQuery = getQuery().find({ label: { $regex: regex } });
-        if (imagesCountQuery) total = await imagesCountQuery.countDocuments();
+        imagesQuery = getPartialSearchQuery(regex);
+        imagesCountQuery = getPartialSearchQuery(regex);
+        total = await imagesCountQuery.countDocuments();
       }
     }
-
-    if (imagesCountQuery && !search) total = await imagesCountQuery.countDocuments();
 
     imagesQuery.skip((usePage - 1) * usePerPage).limit(usePerPage);
     const images = await imagesQuery;
