@@ -13,13 +13,9 @@ const { catchGraphqlConfimed } = require('../../utils/catchAsync');
 
 module.exports = {
   addMyUnsplashImage: catchGraphqlConfimed(async ({ label, imageUrl }, req) => {
-    if (
-      // eslint-disable-next-line operator-linebreak
-      !validator.isURL(imageUrl, { protocols: ['http', 'https'], require_protocol: true }) ||
-      (!imageUrl.endsWith('.jpg') && !imageUrl.endsWith('.png') && !imageUrl.endsWith('.webp'))
-    )
+    if (!validator.isURL(imageUrl, { protocols: ['http', 'https'], require_protocol: true }))
       throw new AppError(
-        'Not valid photo url. Only http:// and https:// protocols and .jpg, .png and .webp files are allowed.',
+        'Not valid photo url. Only http:// and https:// protocols are allowed.',
         errorTypes.VALIDATION,
         400,
       );
@@ -57,7 +53,7 @@ module.exports = {
       getBaseQuery().find({ $text: { $search: searchStr } });
     const getPartialSearchQuery = (regex) => getBaseQuery().find({ label: { $regex: regex } });
 
-    let total = -1;
+    let total = 0;
     let imagesQuery;
     let imagesCountQuery;
 
