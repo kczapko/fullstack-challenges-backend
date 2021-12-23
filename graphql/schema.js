@@ -27,6 +27,20 @@ const schema = buildSchema(`
     label: String!
   }
 
+  type ProductCategory {
+    _id: ID!
+    name: String!
+    user: User!
+  }
+
+  type Product {
+    _id: ID!
+    name: String!
+    note: String
+    image: String
+    category: ProductCategory!
+  }
+
   type AuthData {
     token: String!
     user: User!
@@ -75,6 +89,13 @@ const schema = buildSchema(`
     passwordConfirm: String!
   }
 
+  input ProductInputData {
+    name: String!
+    note: String
+    imageUrl: String
+    category: String!
+  }
+
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
     autologin: UserData!
@@ -82,6 +103,8 @@ const schema = buildSchema(`
     authWithGithub: GithubAuthData!
     me: User!
     myUnsplashImages(search: String, page: Int, perPage: Int): ImagesData!
+    myShoppingifyProductCategories: [ProductCategory!]!
+    myShoppingifyProducts: [Product!]!
   }
 
   type RootMutation {
@@ -105,6 +128,7 @@ const schema = buildSchema(`
     addMyUnsplashImage(label: String!, imageUrl: String!): Image!
     editMyUnsplashImage(id: ID!, label: String!): Image!
     deleteMyUnsplashImage(id: ID!, password: String!): Image!
+    addMyShoppingifyProduct(productInput: ProductInputData!): Product!
   }
 
   schema {
