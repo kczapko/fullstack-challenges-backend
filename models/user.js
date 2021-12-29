@@ -191,6 +191,8 @@ userSchema.methods.getImagesDirectory = async function () {
   const dir = path.join(baseDir, 'public', 'images', 'user', this._id.toString());
 
   await fs.mkdir(dir, { recursive: true });
+  await fs.mkdir(path.join(dir, 'unsplash'), { recursive: true });
+  await fs.mkdir(path.join(dir, 'shoppingify'), { recursive: true });
   return dir;
 };
 

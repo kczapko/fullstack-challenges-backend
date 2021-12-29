@@ -13,7 +13,7 @@ const imageSchema = new mongoose.Schema(
     source: {
       type: String,
       required: [true, 'Image must have a source url.'],
-      maxlength: [300, 'Maximum image source url is 300 characters.'],
+      maxlength: [400, 'Maximum image source url is 400 characters.'],
       get(v) {
         return v.match(/^(http|https):\/\/.*?\//g)[0];
       },

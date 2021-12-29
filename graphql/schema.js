@@ -30,7 +30,6 @@ const schema = buildSchema(`
   type ProductCategory {
     _id: ID!
     name: String!
-    user: User!
   }
 
   type Product {

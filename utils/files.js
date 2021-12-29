@@ -30,11 +30,24 @@ exports.createUnsplashImage = async (buffer, dir) => {
       width: 960,
     });
 
-  const name = `unsplash-${Date.now()}-${Math.random().toString().slice(2)}`;
-  const filename = path.join(dir, `${name}.webp`);
+  const name = `${Date.now()}-${Math.random().toString().slice(2)}`;
+  const filename = path.join(dir, 'unsplash', `${name}.webp`);
   const file = await image.webp({ quality: 80 }).toFile(filename);
 
   return { filename, width: file.width, height: file.height };
+};
+
+exports.createShoppingifyImage = async (buffer, dir) => {
+  const image = sharp(buffer).resize({
+    width: 680,
+  });
+
+  const name = `${Date.now()}-${Math.random().toString().slice(2)}`;
+  const filename = path.join(dir, 'shoppingify', `${name}.webp`);
+
+  await image.webp({ quality: 80 }).toFile(filename);
+
+  return { filename };
 };
 
 exports.deleteFile = async (publicPath) => {
