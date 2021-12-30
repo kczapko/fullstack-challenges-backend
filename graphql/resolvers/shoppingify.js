@@ -8,7 +8,7 @@ const ProductCategory = require('../../models/productCategory');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
-const { createShoppingifyImage } = require('../../utils/files');
+const { createShoppingifyImage, deleteFile } = require('../../utils/files');
 const { publicPath } = require('../../utils/path');
 const { catchGraphqlConfimed } = require('../../utils/catchAsync');
 
@@ -52,7 +52,7 @@ module.exports = {
     const product = Product.create({
       name: productInput.name,
       note: productInput.note,
-      imageUrl: imagePath,
+      image: imagePath,
       category,
       user: req.user,
     });
@@ -68,5 +68,22 @@ module.exports = {
     const products = await Product.find({ user: req.user });
 
     return products;
+  }),
+  myShoppingifyProduct: catchGraphqlConfimed(async ({ id }, req) => {
+    const product = await Product.findOne({ _id: id, user: req.user }).populate('category');
+
+    if (!product) throw new AppError('Product not found!', errorTypes.VALIDATION, 400);
+
+    return product;
+  }),
+  deleteMyShoppingifyProduct: catchGraphqlConfimed(async ({ id }, req) => {
+    const product = await Product.findOne({ _id: id, user: req.user }).populate('category');
+
+    if (!product) throw new AppError('Product not found!', errorTypes.VALIDATION, 400);
+
+    await product.remove();
+    if (!product.image.endsWith('undefined')) await deleteFile(product.image);
+
+    return product;
   }),
 };

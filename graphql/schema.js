@@ -104,6 +104,7 @@ const schema = buildSchema(`
     myUnsplashImages(search: String, page: Int, perPage: Int): ImagesData!
     myShoppingifyProductCategories: [ProductCategory!]!
     myShoppingifyProducts: [Product!]!
+    myShoppingifyProduct(id: ID!): Product!
   }
 
   type RootMutation {
@@ -128,6 +129,7 @@ const schema = buildSchema(`
     editMyUnsplashImage(id: ID!, label: String!): Image!
     deleteMyUnsplashImage(id: ID!, password: String!): Image!
     addMyShoppingifyProduct(productInput: ProductInputData!): Product!
+    deleteMyShoppingifyProduct(id: ID!): Product!
   }
 
   schema {

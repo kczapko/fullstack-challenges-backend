@@ -116,6 +116,10 @@ const userSchema = new mongoose.Schema(
       },
     },
     newEmailConfirmationToken: String,
+    imagesDirectoriesCreated: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );
@@ -190,10 +194,18 @@ userSchema.methods.getImagesDirectory = async function () {
   // eslint-disable-next-line no-underscore-dangle
   const dir = path.join(baseDir, 'public', 'images', 'user', this._id.toString());
 
+  if (this.imagesDirectoriesCreated < 1) await this.createImageDirectories(dir);
+
+  return dir;
+};
+
+userSchema.methods.createImageDirectories = async function (dir) {
   await fs.mkdir(dir, { recursive: true });
   await fs.mkdir(path.join(dir, 'unsplash'), { recursive: true });
   await fs.mkdir(path.join(dir, 'shoppingify'), { recursive: true });
-  return dir;
+
+  this.imagesDirectoriesCreated = 1;
+  await this.save();
 };
 
 userSchema.pre('save', function (next) {

@@ -7,7 +7,7 @@ const Image = require('../../models/image');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
-const { createUnsplashImage } = require('../../utils/files');
+const { createUnsplashImage, deleteFile } = require('../../utils/files');
 const { publicPath } = require('../../utils/path');
 const { catchGraphqlConfimed } = require('../../utils/catchAsync');
 
@@ -109,6 +109,7 @@ module.exports = {
     if (!image) throw new AppError('Image not found!', errorTypes.VALIDATION, 400);
 
     await image.remove();
+    await deleteFile(image.path);
 
     return image;
   }),
