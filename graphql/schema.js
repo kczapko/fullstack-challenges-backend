@@ -40,6 +40,19 @@ const schema = buildSchema(`
     category: ProductCategory!
   }
 
+  type ShoppingListProduct {
+    product: Product!
+    quantity: Int!
+    completed: Boolean!
+  }
+  
+  type ShoppingList {
+    _id: ID!
+    name: String!
+    state: String!
+    products: [ShoppingListProduct]!
+  }
+
   type AuthData {
     token: String!
     user: User!
@@ -95,6 +108,21 @@ const schema = buildSchema(`
     category: String!
   }
 
+  input ShoppingListProductInputData {
+    _id: ID!
+  }
+
+  input ShoppingListProductsInputData {
+    product: ShoppingListProductInputData!
+    quantity: Int!
+    completed: Boolean!
+  }
+  
+  input ShoppingListInputData {
+    name: String!
+    products: [ShoppingListProductsInputData!]!
+  }
+
   type RootQuery {
     login(loginInput: LoginInputData!): AuthData!
     autologin: UserData!
@@ -105,6 +133,7 @@ const schema = buildSchema(`
     myShoppingifyProductCategories: [ProductCategory!]!
     myShoppingifyProducts: [Product!]!
     myShoppingifyProduct(id: ID!): Product!
+    myShoppingList: ShoppingList
   }
 
   type RootMutation {
@@ -130,6 +159,11 @@ const schema = buildSchema(`
     deleteMyUnsplashImage(id: ID!, password: String!): Image!
     addMyShoppingifyProduct(productInput: ProductInputData!): Product!
     deleteMyShoppingifyProduct(id: ID!): Product!
+    saveMyShoppingList(shoppingListInput: ShoppingListInputData!): ShoppingList!
+    updateMyShoppingList(shoppingListInput: ShoppingListInputData!): ShoppingList!
+    toggleShoppingifyProductCompletion(id: ID!, completed: Boolean!): Boolean!
+    completeMyShoppingList: Boolean!
+    cancelMyShoppingList: Boolean!
   }
 
   schema {

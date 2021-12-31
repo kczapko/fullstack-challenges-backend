@@ -5,6 +5,7 @@ const { fromBuffer } = require('file-type');
 
 const Product = require('../../models/product');
 const ProductCategory = require('../../models/productCategory');
+const ShoppingList = require('../../models/shoppingList');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
@@ -85,5 +86,73 @@ module.exports = {
     if (!product.image.endsWith('undefined')) await deleteFile(product.image);
 
     return product;
+  }),
+  myShoppingList: catchGraphqlConfimed(async (args, req) => {
+    const shoppingList = await ShoppingList.findOne({ state: 'active', user: req.user });
+
+    return shoppingList;
+  }),
+  saveMyShoppingList: catchGraphqlConfimed(async ({ shoppingListInput }, req) => {
+    const shoppingList = await ShoppingList.create({
+      name: shoppingListInput.name,
+      products: shoppingListInput.products,
+      user: req.user,
+    });
+
+    return shoppingList;
+  }),
+  updateMyShoppingList: catchGraphqlConfimed(async ({ shoppingListInput }, req) => {
+    const shoppingList = await ShoppingList.findOne({ state: 'active', user: req.user });
+
+    if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
+
+    shoppingList.set({
+      name: shoppingListInput.name,
+      products: shoppingListInput.products,
+    });
+
+    await shoppingList.save();
+
+    return shoppingList;
+  }),
+  toggleShoppingifyProductCompletion: catchGraphqlConfimed(async ({ id, completed }, req) => {
+    const shoppingList = await ShoppingList.findOne({ state: 'active', user: req.user });
+
+    if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
+
+    // eslint-disable-next-line no-underscore-dangle
+    const product = shoppingList.products.find((p) => p.product._id.toString() === id);
+
+    if (!product)
+      throw new AppError('Product not found in Shopping List!', errorTypes.VALIDATION, 400);
+
+    product.set({ completed });
+    await shoppingList.save();
+
+    return true;
+  }),
+  completeMyShoppingList: catchGraphqlConfimed(async (args, req) => {
+    const shoppingList = await ShoppingList.findOne({ state: 'active', user: req.user });
+
+    if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
+
+    shoppingList.set({
+      state: 'completed',
+    });
+    await shoppingList.save();
+
+    return true;
+  }),
+  cancelMyShoppingList: catchGraphqlConfimed(async (args, req) => {
+    const shoppingList = await ShoppingList.findOne({ state: 'active', user: req.user });
+
+    if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
+
+    shoppingList.set({
+      state: 'cancelled',
+    });
+    await shoppingList.save();
+
+    return true;
   }),
 };
