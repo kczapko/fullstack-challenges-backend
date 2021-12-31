@@ -155,4 +155,23 @@ module.exports = {
 
     return true;
   }),
+  myShoppingHistory: catchGraphqlConfimed(async (args, req) => {
+    const shoppingLists = await ShoppingList.find({
+      state: { $in: ['completed', 'cancelled'] },
+      user: req.user,
+    }).sort({ updatedAt: -1 });
+
+    return shoppingLists;
+  }),
+  mySingleShoppingHistory: catchGraphqlConfimed(async ({ id }, req) => {
+    const shoppingList = await ShoppingList.findOne({
+      _id: id,
+      state: { $in: ['completed', 'cancelled'] },
+      user: req.user,
+    }).populate({ path: 'products.product', populate: { path: 'category' } });
+
+    if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
+
+    return shoppingList;
+  }),
 };

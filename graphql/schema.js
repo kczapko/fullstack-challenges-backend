@@ -51,6 +51,7 @@ const schema = buildSchema(`
     name: String!
     state: String!
     products: [ShoppingListProduct]!
+    updatedAt: String!
   }
 
   type AuthData {
@@ -134,6 +135,8 @@ const schema = buildSchema(`
     myShoppingifyProducts: [Product!]!
     myShoppingifyProduct(id: ID!): Product!
     myShoppingList: ShoppingList
+    myShoppingHistory: [ShoppingList!]!
+    mySingleShoppingHistory(id: ID!): ShoppingList!
   }
 
   type RootMutation {
