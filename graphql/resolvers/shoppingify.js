@@ -243,83 +243,101 @@ module.exports = {
           as: 'category',
         },
       },
+      /* Temporary block = not working on production */
+      // {
+      //   $group: {
+      //     _id: null,
+      //     stats: {
+      //       $accumulator: {
+      //         init: function () {
+      //           const currentDate = new Date();
+      //           const currentYear = currentDate.getFullYear();
+      //           const currentMonth = currentDate.getMonth();
+      //           const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+      //           const state = {
+      //             currentDate,
+      //             currentYear,
+      //             currentMonth,
+      //             products: [],
+      //             categories: [],
+      //             monthly: Array(12).fill(0),
+      //             daily: Array(daysInMonth[currentMonth]).fill(0),
+      //             total: 0,
+      //           };
+
+      //           return state;
+      //         },
+      //         accumulate: function (state, products, product, category, date) {
+      //           const prod = state.products.find((p) => p.name === product[0].name);
+      //           if (prod) prod.count += products.quantity;
+      //           else
+      //             state.products.push({
+      //               name: product[0].name,
+      //               count: products.quantity,
+      //             });
+
+      //           const cat = state.categories.find((c) => c.name === category[0].name);
+      //           if (cat) cat.count += products.quantity;
+      //           else
+      //             state.categories.push({
+      //               name: category[0].name,
+      //               count: products.quantity,
+      //             });
+
+      //           const month = date.getMonth();
+      //           const day = date.getDate();
+      //           // eslint-disable-next-line no-param-reassign
+      //           state.monthly[month] += products.quantity;
+      //           // eslint-disable-next-line no-param-reassign
+      //           if (month === state.currentMonth) state.daily[day - 1] += products.quantity;
+
+      //           // eslint-disable-next-line no-param-reassign
+      //           state.total += products.quantity;
+
+      //           return state;
+      //         },
+      //         accumulateArgs: ['$products', '$product', '$category', '$updatedAt'],
+      //         merge: function (state1, state2) {
+      //           return {
+      //             currentDate: state1.currentDate,
+      //             currentYear: state1.currentYear,
+      //             currentMonth: state1.currentMonth,
+      //             products: [...state1.products, ...state2.products],
+      //             categories: [...state1.categories, ...state2.categories],
+      //             monthly: [...state1.monthly, ...state2.monthly],
+      //             daily: [...state1.daily, ...state2.daily],
+      //             total: state1.total + state2.total,
+      //           };
+      //         },
+      //         finalize: function (state) {
+      //           state.products.sort((a, b) => b.count - a.count);
+      //           state.categories.sort((a, b) => b.count - a.count);
+      //           return state;
+      //         },
+      //         lang: 'js',
+      //       },
+      //     },
+      //   },
+      // },
       {
-        $group: {
-          _id: null,
-          stats: {
-            $accumulator: {
-              init: function () {
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
-                const currentMonth = currentDate.getMonth();
-                const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-                const state = {
-                  currentDate,
-                  currentYear,
-                  currentMonth,
-                  products: [],
-                  categories: [],
-                  monthly: Array(12).fill(0),
-                  daily: Array(daysInMonth[currentMonth]).fill(0),
-                  total: 0,
-                };
-
-                return state;
-              },
-              accumulate: function (state, products, product, category, date) {
-                const prod = state.products.find((p) => p.name === product[0].name);
-                if (prod) prod.count += products.quantity;
-                else
-                  state.products.push({
-                    name: product[0].name,
-                    count: products.quantity,
-                  });
-
-                const cat = state.categories.find((c) => c.name === category[0].name);
-                if (cat) cat.count += products.quantity;
-                else
-                  state.categories.push({
-                    name: category[0].name,
-                    count: products.quantity,
-                  });
-
-                const month = date.getMonth();
-                const day = date.getDate();
-                // eslint-disable-next-line no-param-reassign
-                state.monthly[month] += products.quantity;
-                // eslint-disable-next-line no-param-reassign
-                if (month === state.currentMonth) state.daily[day - 1] += products.quantity;
-
-                // eslint-disable-next-line no-param-reassign
-                state.total += products.quantity;
-
-                return state;
-              },
-              accumulateArgs: ['$products', '$product', '$category', '$updatedAt'],
-              merge: function (state1, state2) {
-                return {
-                  currentDate: state1.currentDate,
-                  currentYear: state1.currentYear,
-                  currentMonth: state1.currentMonth,
-                  products: [...state1.products, ...state2.products],
-                  categories: [...state1.categories, ...state2.categories],
-                  monthly: [...state1.monthly, ...state2.monthly],
-                  daily: [...state1.daily, ...state2.daily],
-                  total: state1.total + state2.total,
-                };
-              },
-              finalize: function (state) {
-                state.products.sort((a, b) => b.count - a.count);
-                state.categories.sort((a, b) => b.count - a.count);
-                return state;
-              },
-              lang: 'js',
-            },
-          },
+        $project: {
+          _id: 0,
+          'category.name': 1,
+          'product.name': 1,
+          'products.quantity': 1,
+          updatedAt: 1,
         },
       },
     ]);
+
+    if (statistics.length)
+      return JSON.stringify({
+        currentDate: new Date(),
+        currentYear: new Date().getFullYear(),
+        currentMonth: new Date().getMonth(),
+        stats: statistics,
+      });
 
     return JSON.stringify(statistics);
   }),
