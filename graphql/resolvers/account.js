@@ -4,6 +4,10 @@ const axios = require('axios');
 const { fromBuffer } = require('file-type');
 
 const User = require('../../models/user');
+const Image = require('../../models/image');
+const Product = require('../../models/product');
+const ProductCategory = require('../../models/productCategory');
+const ShoppingList = require('../../models/shoppingList');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
@@ -70,6 +74,11 @@ module.exports = {
 
     const dir = await req.user.getImagesDirectory();
     await deleteDir(dir);
+
+    await Image.deleteMany({ user: req.user });
+    await Product.deleteMany({ user: req.user });
+    await ProductCategory.deleteMany({ user: req.user });
+    await ShoppingList.deleteMany({ user: req.user });
 
     await req.user.remove();
 

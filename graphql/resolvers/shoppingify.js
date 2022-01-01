@@ -84,6 +84,38 @@ module.exports = {
 
     if (!product) throw new AppError('Product not found!', errorTypes.VALIDATION, 400);
 
+    // Remove product from shopping lists and eventually delete list if it's empty
+    const shoppingLists = await ShoppingList.find({
+      user: req.user,
+      'products.product': product._id,
+    });
+
+    if (shoppingLists.length) {
+      const updatePromises = shoppingLists
+        .map((list) => {
+          const prod = list.products.find((p) => p.product.toString() === product._id.toString());
+          if (prod) {
+            list.products.pull(prod);
+
+            if (list.products.length === 0) return list.remove();
+            return list.save();
+          }
+          return null;
+        })
+        .filter((p) => p !== null);
+
+      await Promise.all(updatePromises);
+    }
+
+    // Remove category if products count in it is exactly one (our product will be removed)
+    const categoryProductsCount = await Product.find({
+      user: req.user,
+      category: product.category,
+    }).countDocuments();
+
+    if (categoryProductsCount === 1) await ProductCategory.findByIdAndDelete(product.category);
+
+    // Remove product
     await product.remove();
     if (!product.image.endsWith('undefined')) await deleteFile(product.image);
 
@@ -254,9 +286,12 @@ module.exports = {
 
                 const month = date.getMonth();
                 const day = date.getDate();
+                // eslint-disable-next-line no-param-reassign
                 state.monthly[month] += products.quantity;
+                // eslint-disable-next-line no-param-reassign
                 if (month === state.currentMonth) state.daily[day - 1] += products.quantity;
 
+                // eslint-disable-next-line no-param-reassign
                 state.total += products.quantity;
 
                 return state;
