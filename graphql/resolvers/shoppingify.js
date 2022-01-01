@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable object-shorthand */
 const validator = require('validator');
 const axios = require('axios');
 
@@ -120,7 +122,6 @@ module.exports = {
 
     if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
 
-    // eslint-disable-next-line no-underscore-dangle
     const product = shoppingList.products.find((p) => p.product._id.toString() === id);
 
     if (!product)
@@ -173,5 +174,118 @@ module.exports = {
     if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
 
     return shoppingList;
+  }),
+  myShoppingStatistics: catchGraphqlConfimed(async (args, req) => {
+    const year = new Date().getFullYear();
+
+    const statistics = await ShoppingList.aggregate([
+      {
+        $match: {
+          state: 'completed',
+          user: req.user._id,
+          updatedAt: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $unwind: '$products',
+      },
+      {
+        $match: { 'products.completed': true },
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'products.product',
+          foreignField: '_id',
+          as: 'product',
+        },
+      },
+      {
+        $lookup: {
+          from: 'productcategories',
+          localField: 'product.category',
+          foreignField: '_id',
+          as: 'category',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          stats: {
+            $accumulator: {
+              init: function () {
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth();
+                const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+                const state = {
+                  currentDate,
+                  currentYear,
+                  currentMonth,
+                  products: [],
+                  categories: [],
+                  monthly: Array(12).fill(0),
+                  daily: Array(daysInMonth[currentMonth]).fill(0),
+                  total: 0,
+                };
+
+                return state;
+              },
+              accumulate: function (state, products, product, category, date) {
+                const prod = state.products.find((p) => p.name === product[0].name);
+                if (prod) prod.count += products.quantity;
+                else
+                  state.products.push({
+                    name: product[0].name,
+                    count: products.quantity,
+                  });
+
+                const cat = state.categories.find((c) => c.name === category[0].name);
+                if (cat) cat.count += products.quantity;
+                else
+                  state.categories.push({
+                    name: category[0].name,
+                    count: products.quantity,
+                  });
+
+                const month = date.getMonth();
+                const day = date.getDate();
+                state.monthly[month] += products.quantity;
+                if (month === state.currentMonth) state.daily[day - 1] += products.quantity;
+
+                state.total += products.quantity;
+
+                return state;
+              },
+              accumulateArgs: ['$products', '$product', '$category', '$updatedAt'],
+              merge: function (state1, state2) {
+                return {
+                  currentDate: state1.currentDate,
+                  currentYear: state1.currentYear,
+                  currentMonth: state1.currentMonth,
+                  products: [...state1.products, ...state2.products],
+                  categories: [...state1.categories, ...state2.categories],
+                  monthly: [...state1.monthly, ...state2.monthly],
+                  daily: [...state1.daily, ...state2.daily],
+                  total: state1.total + state2.total,
+                };
+              },
+              finalize: function (state) {
+                state.products.sort((a, b) => b.count - a.count);
+                state.categories.sort((a, b) => b.count - a.count);
+                return state;
+              },
+              lang: 'js',
+            },
+          },
+        },
+      },
+    ]);
+
+    return JSON.stringify(statistics);
   }),
 };

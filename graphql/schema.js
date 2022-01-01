@@ -137,6 +137,7 @@ const schema = buildSchema(`
     myShoppingList: ShoppingList
     myShoppingHistory: [ShoppingList!]!
     mySingleShoppingHistory(id: ID!): ShoppingList!
+    myShoppingStatistics: String!
   }
 
   type RootMutation {
