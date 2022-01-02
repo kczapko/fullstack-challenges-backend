@@ -88,6 +88,7 @@ module.exports = {
     const shoppingLists = await ShoppingList.find({
       user: req.user,
       'products.product': product._id,
+      state: { $ne: 'active' },
     });
 
     if (shoppingLists.length) {
