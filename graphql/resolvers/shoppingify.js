@@ -170,6 +170,9 @@ module.exports = {
 
     if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
 
+    if (!shoppingList.products.length)
+      throw new AppError("You can't complete empty shopping list!", errorTypes.VALIDATION, 400);
+
     shoppingList.set({
       state: 'completed',
     });
@@ -181,6 +184,9 @@ module.exports = {
     const shoppingList = await ShoppingList.findOne({ state: 'active', user: req.user });
 
     if (!shoppingList) throw new AppError('Shopping List not found!', errorTypes.VALIDATION, 400);
+
+    if (!shoppingList.products.length)
+      throw new AppError("You can't cancel empty shopping list!", errorTypes.VALIDATION, 400);
 
     shoppingList.set({
       state: 'cancelled',
