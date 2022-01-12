@@ -34,5 +34,5 @@ module.exports = async (req, res, next) => {
     req.authError = err;
   }
 
-  next();
+  return next();
 };

@@ -13,8 +13,7 @@ const schema = buildSchema(`
   }
 
   type UserPublic {
-    email: String!
-    name: String
+    username: String!
     photo: String
   }
 
@@ -71,6 +70,27 @@ const schema = buildSchema(`
   type ImagesData {
     total: Int!
     images: [Image!]!
+  }
+
+  type Channel {
+    _id: ID!
+    name: String!
+    description: String!
+    members: [UserPublic!]!
+  }
+
+  type Message {
+    _id: ID!
+    message: String!
+    user: UserPublic!
+    channel: Channel!
+  }
+
+  type ChatSubscription {
+    type: String!
+    member: UserPublic
+    channel: Channel
+    message: Message
   }
 
   input SignupInputData {
@@ -138,6 +158,8 @@ const schema = buildSchema(`
     myShoppingHistory: [ShoppingList!]!
     mySingleShoppingHistory(id: ID!): ShoppingList!
     myShoppingStatistics: String!
+    getChannels: [Channel!]!
+    getMessages(channelId: ID!): [Message!]!
   }
 
   type RootMutation {
@@ -168,11 +190,18 @@ const schema = buildSchema(`
     toggleShoppingifyProductCompletion(id: ID!, completed: Boolean!): Boolean!
     completeMyShoppingList: Boolean!
     cancelMyShoppingList: Boolean!
+    addChannel(name: String!, description: String): Channel!
+    addMessage(msg: String!, channelId: ID!): Message!
+  }
+
+  type RootSubscription {
+    joinChannel(name: String!): ChatSubscription
   }
 
   schema {
     query: RootQuery
     mutation: RootMutation
+    subscription: RootSubscription
   }
 `);
 

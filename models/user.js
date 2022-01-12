@@ -124,6 +124,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+userSchema.virtual('username').get(function () {
+  return this.name || this.email;
+});
+
 userSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };

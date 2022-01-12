@@ -6,7 +6,7 @@ const chatMessageSchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: [true, 'Message can not be empty.'],
-      maxlength: [10000, 'Maximum message length is 10000 characters.'],
+      maxlength: [5000, 'Maximum message length is 5000 characters.'],
     },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
