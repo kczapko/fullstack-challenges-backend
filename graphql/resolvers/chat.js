@@ -43,7 +43,13 @@ module.exports = {
     });
 
     pubsub.publish(CHAT_ACTION, {
-      joinChannel: { type: ACTION_NEW_MESSAGE, message, channel, memeber: req.user },
+      // prettier-ignore
+      joinChannel: {
+        type: ACTION_NEW_MESSAGE,
+        message,
+        channel: { ...channel.toJSON(), members: [] },
+        member: req.user,
+      },
     });
 
     return message;
@@ -58,11 +64,12 @@ module.exports = {
 
     const channel = await ChatChannel.findOne({ name }).populate({
       path: 'members',
+      select: 'name email photo username',
     });
 
     if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
 
-    const memeberExists = channel.members.some(
+    const memeberExists = channel.members.find(
       (memeber) => memeber._id.toString() === ctx.user._id.toString(),
     );
 
@@ -91,10 +98,33 @@ module.exports = {
     return withFilter(
       () => pubsub.asyncIterator(CHAT_ACTION),
       (payload, variables) => {
-        // console.log(payload);
-        // console.log(variables);
-        return true;
+        // prettier-ignore
+        const {
+          type,
+          member,
+          channel: channelData,
+        } = payload.joinChannel;
+        const { user, name: channelName } = variables;
+
+        switch (type) {
+          case ACTION_JOINED_CHANNEL:
+            if (member._id.toString() === user._id.toString()) return true;
+            return false;
+          case ACTION_NEW_MEMBER:
+            if (member._id.toString() !== user._id.toString() && channelName === channelData.name)
+              return true;
+            return false;
+          case ACTION_NEW_CHANNEL:
+            if (member._id.toString() !== user._id.toString()) return true;
+            return false;
+          case ACTION_NEW_MESSAGE:
+            if (member._id.toString() !== user._id.toString() && channelName === channelData.name)
+              return true;
+            return false;
+          default:
+            return true;
+        }
       },
-    )(null, args);
+    )(null, { ...args, user: ctx.user });
   },
 };
