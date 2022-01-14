@@ -55,7 +55,12 @@ module.exports = {
     return message;
   }),
   getMessages: catchGraphqlConfimed(async ({ channelId }) => {
-    const messages = await ChatMessage.find({ channel: channelId });
+    const messages = await ChatMessage.find({ channel: channelId })
+      .populate({
+        path: 'user',
+        select: 'name email photo username',
+      })
+      .sort({ createdAt: 1 });
 
     return messages;
   }),
@@ -122,7 +127,7 @@ module.exports = {
               return true;
             return false;
           default:
-            return true;
+            return false;
         }
       },
     )(null, { ...args, user: ctx.user });

@@ -82,6 +82,7 @@ const schema = buildSchema(`
   type Message {
     _id: ID!
     message: String!
+    createdAt: String!
     user: UserPublic!
     channel: Channel!
   }

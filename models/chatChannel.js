@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const chatChannelSchema = new mongoose.Schema(
   {
@@ -9,6 +10,15 @@ const chatChannelSchema = new mongoose.Schema(
       required: [true, 'Channel must have a name.'],
       minlength: [5, 'Minimum channel name length is 5 characters.'],
       maxlength: [100, 'Maximum channel name length is 100 characters.'],
+      validate: {
+        validator(val) {
+          if (val)
+            // prettier-ignore
+            return validator.isAlphaLocales.some((locale) => validator.isAlpha(val, locale, { ignore: ' ' }));
+          return true;
+        },
+        message: 'Channel name can contain only alphabetical characters and spaces.',
+      },
     },
     description: {
       type: String,
