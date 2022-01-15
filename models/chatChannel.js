@@ -46,7 +46,14 @@ const chatChannelSchema = new mongoose.Schema(
         },
         'You must provide password for private channel.',
       ],
-      minlength: [8, 'Password must have at least 8 charactres.'],
+      // minlength: [8, 'Password must have at least 8 charactres.'],
+      validate: {
+        validator(val) {
+          if (!this.isPrivate) return true;
+          return val.length > 8;
+        },
+        message: 'Password must have at least 8 charactres.',
+      },
     },
   },
   { timestamps: true },
@@ -58,6 +65,7 @@ chatChannelSchema.methods.comparePassword = async function (password) {
 
 chatChannelSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
+  if (!this.password) return next();
 
   this.password = await bcrypt.hash(this.password, 13);
 

@@ -20,7 +20,7 @@ const ACTION_JOINED_CHANNEL = 'JOIN_CHANNEL';
 module.exports = {
   addChannel: catchGraphqlConfimed(
     // eslint-disable-next-line object-curly-newline
-    async ({ name, description, isPrivate = false, password = undefined }, req) => {
+    async ({ name, description, isPrivate = false, password = '' }, req) => {
       let channelPassword = password;
 
       if (!isPrivate) channelPassword = undefined;
