@@ -80,6 +80,10 @@ module.exports = {
     return product;
   }),
   deleteMyShoppingifyProduct: catchGraphqlConfimed(async ({ id }, req) => {
+    /* demo user */
+    if (req.user.email === 'demo@demo.demo')
+      throw new AppError("Demo user can't delete products", errorTypes.VALIDATION, 400);
+
     const product = await Product.findOne({ _id: id, user: req.user }).populate('category');
 
     if (!product) throw new AppError('Product not found!', errorTypes.VALIDATION, 400);
@@ -99,7 +103,7 @@ module.exports = {
             list.products.pull(prod);
 
             if (list.products.length === 0) return list.remove();
-            return list.save();
+            return list.save({ timestamps: false });
           }
           return null;
         })
@@ -118,7 +122,7 @@ module.exports = {
 
     // Remove product
     await product.remove();
-    if (!product.image.endsWith('undefined')) await deleteFile(product.image);
+    if (product.image) await deleteFile(product.image);
 
     return product;
   }),

@@ -17,6 +17,7 @@ const productSchema = new mongoose.Schema({
     type: String,
     maxlength: [100, 'Maximum image path length is 100 characters.'],
     get(v) {
+      if (!v) return null;
       return `${process.env.SERVER_URL}${v}`;
     },
   },
