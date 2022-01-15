@@ -53,7 +53,7 @@ class Email {
     try {
       this.template = await inlineCss(this.template, { url: './' });
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 

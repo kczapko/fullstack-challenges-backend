@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const chatChannelSchema = new mongoose.Schema(
   {
@@ -33,8 +34,34 @@ const chatChannelSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    isPrivate: {
+      type: Boolean,
+      default: false,
+    },
+    password: {
+      type: String,
+      required: [
+        function () {
+          return this.isPrivate;
+        },
+        'You must provide password for private channel.',
+      ],
+      minlength: [8, 'Password must have at least 8 charactres.'],
+    },
   },
   { timestamps: true },
 );
+
+chatChannelSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(password, this.password);
+};
+
+chatChannelSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  this.password = await bcrypt.hash(this.password, 13);
+
+  return next();
+});
 
 module.exports = mongoose.model('ChatChannel', chatChannelSchema);

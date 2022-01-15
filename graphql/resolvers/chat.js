@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const { PubSub, withFilter } = require('graphql-subscriptions');
+const validator = require('validator');
 
 const ChatChannel = require('../../models/chatChannel');
 const ChatMessage = require('../../models/chatMessage');
@@ -17,15 +18,35 @@ const ACTION_NEW_CHANNEL = 'NEW_CHANNEL';
 const ACTION_JOINED_CHANNEL = 'JOIN_CHANNEL';
 
 module.exports = {
-  addChannel: catchGraphqlConfimed(async ({ name, description }, req) => {
-    const channel = await ChatChannel.create({ name, description, members: [req.user] });
+  addChannel: catchGraphqlConfimed(
+    // eslint-disable-next-line object-curly-newline
+    async ({ name, description, isPrivate = false, password = undefined }, req) => {
+      let channelPassword = password;
 
-    pubsub.publish(CHAT_ACTION, {
-      joinChannel: { type: ACTION_NEW_CHANNEL, channel, member: req.user },
-    });
+      if (!isPrivate) channelPassword = undefined;
+      if (isPrivate)
+        if (!validator.isLength(channelPassword, { max: process.env.MAX_PASSWORD_LENGTH }))
+          throw new AppError(
+            `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
+            errorTypes.VALIDATION,
+            400,
+          );
 
-    return channel;
-  }),
+      const channel = await ChatChannel.create({
+        name,
+        description,
+        members: [req.user],
+        isPrivate,
+        password: channelPassword,
+      });
+
+      pubsub.publish(CHAT_ACTION, {
+        joinChannel: { type: ACTION_NEW_CHANNEL, channel, member: req.user },
+      });
+
+      return channel;
+    },
+  ),
   getChannels: catchGraphqlConfimed(async () => {
     const channels = await ChatChannel.find({}).sort({ createdAt: 1 });
 
@@ -74,7 +95,7 @@ module.exports = {
       .populate({
         path: 'user',
         select: 'name email photo username',
-      }); // .skip(skip).limit(perPage);
+      });
 
     return {
       total,
@@ -82,14 +103,19 @@ module.exports = {
     };
   }),
   joinChannel: async (args, ctx) => {
-    const { name } = args;
+    const { name, password = '' } = args;
 
-    const channel = await ChatChannel.findOne({ name }).populate({
+    const channel = await ChatChannel.findOne({ name });
+
+    if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
+
+    if (channel.isPrivate && !(await channel.comparePassword(password)))
+      throw new AppError('Wrong password.', errorTypes.AUTHENTICATION, 401);
+
+    channel.populate({
       path: 'members',
       select: 'name email photo username',
     });
-
-    if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
 
     const memeberExists = channel.members.find(
       (memeber) => memeber._id.toString() === ctx.user._id.toString(),

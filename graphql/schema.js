@@ -77,6 +77,7 @@ const schema = buildSchema(`
     name: String!
     description: String!
     members: [UserPublic!]!
+    isPrivate: Boolean!
   }
 
   type Message {
@@ -196,12 +197,12 @@ const schema = buildSchema(`
     toggleShoppingifyProductCompletion(id: ID!, completed: Boolean!): Boolean!
     completeMyShoppingList: Boolean!
     cancelMyShoppingList: Boolean!
-    addChannel(name: String!, description: String): Channel!
+    addChannel(name: String!, description: String, isPrivate: Boolean, password: String): Channel!
     addMessage(msg: String!, channelId: ID!): Message!
   }
 
   type RootSubscription {
-    joinChannel(name: String!): ChatSubscription
+    joinChannel(name: String!, password: String): ChatSubscription
   }
 
   schema {
