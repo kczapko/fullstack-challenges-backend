@@ -43,10 +43,7 @@ module.exports = {
 
     return image;
   }),
-  myUnsplashImages: catchGraphqlConfimed(async ({ search, page, perPage }, req) => {
-    const usePage = page > 0 ? page : 1;
-    const usePerPage = perPage > 0 ? perPage : 10;
-
+  myUnsplashImages: catchGraphqlConfimed(async ({ search, skip = 0, perPage = 10 }, req) => {
     const getBaseQuery = () => Image.find({ user: req.user }).sort({ createdAt: -1 });
     const getFullSearchQuery = (searchStr) =>
       // eslint-disable-next-line implicit-arrow-linebreak
@@ -82,7 +79,7 @@ module.exports = {
       }
     }
 
-    imagesQuery.skip((usePage - 1) * usePerPage).limit(usePerPage);
+    imagesQuery.skip(skip).limit(perPage);
     const images = await imagesQuery;
 
     return {
@@ -101,6 +98,10 @@ module.exports = {
     return image;
   }),
   deleteMyUnsplashImage: catchGraphqlConfimed(async ({ id, password }, req) => {
+    /* demo user */
+    if (req.user.email === 'demo@demo.demo')
+      throw new AppError("Demo user can't delete images", errorTypes.VALIDATION, 400);
+
     if (!(await req.user.comparePassword(password)))
       throw new AppError('Wrong password', errorTypes.VALIDATION, 400);
 

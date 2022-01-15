@@ -52,8 +52,8 @@ class Email {
     this.textTemplate = htmlToText(this.template);
     try {
       this.template = await inlineCss(this.template, { url: './' });
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 

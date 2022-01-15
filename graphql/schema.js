@@ -157,7 +157,7 @@ const schema = buildSchema(`
     authWithTwitter: String!
     authWithGithub: GithubAuthData!
     me: User!
-    myUnsplashImages(search: String, page: Int, perPage: Int): ImagesData!
+    myUnsplashImages(search: String, skip: Int, perPage: Int): ImagesData!
     myShoppingifyProductCategories: [ProductCategory!]!
     myShoppingifyProducts: [Product!]!
     myShoppingifyProduct(id: ID!): Product!
