@@ -54,15 +54,32 @@ module.exports = {
 
     return message;
   }),
-  getMessages: catchGraphqlConfimed(async ({ channelId }) => {
-    const messages = await ChatMessage.find({ channel: channelId })
+  getMessages: catchGraphqlConfimed(async ({ channelId, skip = 0, perPage = 50 }) => {
+    // eslint-disable-next-line arrow-body-style
+    const getMessagesQuery = () => {
+      return ChatMessage.find({ channel: channelId });
+    };
+
+    const total = await getMessagesQuery().countDocuments();
+    if (total === 0)
+      return {
+        total: 0,
+        messages: [],
+      };
+
+    const messages = await getMessagesQuery()
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(perPage)
       .populate({
         path: 'user',
         select: 'name email photo username',
-      })
-      .sort({ createdAt: 1 });
+      }); // .skip(skip).limit(perPage);
 
-    return messages;
+    return {
+      total,
+      messages,
+    };
   }),
   joinChannel: async (args, ctx) => {
     const { name } = args;

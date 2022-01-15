@@ -94,6 +94,11 @@ const schema = buildSchema(`
     message: Message
   }
 
+  type MessagesData {
+    total: Int!
+    messages: [Message!]!
+  }
+
   input SignupInputData {
     email: String!
     password: String!
@@ -160,7 +165,7 @@ const schema = buildSchema(`
     mySingleShoppingHistory(id: ID!): ShoppingList!
     myShoppingStatistics: String!
     getChannels: [Channel!]!
-    getMessages(channelId: ID!): [Message!]!
+    getMessages(channelId: ID!, skip: Int, perPage: Int): MessagesData!
   }
 
   type RootMutation {

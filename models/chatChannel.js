@@ -25,7 +25,7 @@ const chatChannelSchema = new mongoose.Schema(
       trim: true,
       required: [true, 'Channel must have a description.'],
       minlength: [10, 'Minimum channel description length is 10 characters.'],
-      maxlength: [500, 'Maximum channel description length is 500 characters.'],
+      maxlength: [300, 'Maximum channel description length is 300 characters.'],
     },
     members: [
       {

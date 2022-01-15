@@ -4,14 +4,13 @@ require('dotenv').config({ path: './config.env' });
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-const privateKey = fs.readFileSync('key.pem', 'utf8');
-const certificate = fs.readFileSync('cert.pem', 'utf8');
-
 const mongoose = require('mongoose');
 
 const app = require('./express');
 const { createWebSocketGraphQlServer } = require('./ws');
 
+const privateKey = fs.readFileSync('key.pem', 'utf8');
+const certificate = fs.readFileSync('cert.pem', 'utf8');
 const port = process.env.PORT || 3000;
 const sslPort = process.env.SSL_PORT || 3443;
 // prettier-ignore
