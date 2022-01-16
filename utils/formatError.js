@@ -15,9 +15,11 @@ const handleDBDuplicateKeyError = (err) => {
     return new AppError('User with that e-mail already exists', errorTypes.VALIDATION, 400);
 
   if (err.keyValue.name) {
-    if (err.message.includes('fullstack.products'))
+    // if (err.message.includes('fullstack.products'))
+    if (err.message.indexOf('fullstack.products') > -1)
       return new AppError('Product with that name already exists', errorTypes.VALIDATION, 400);
-    if (err.message.includes('fullstack.chatchannels'))
+    // if (err.message.includes('fullstack.chatchannels'))
+    if (err.message.indexOf('fullstack.chatchannels') > -1)
       return new AppError('Channel with that name already exists', errorTypes.VALIDATION, 400);
 
     return new AppError('Internal server error', errorTypes.DATABASE, 500);
