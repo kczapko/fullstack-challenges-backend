@@ -50,7 +50,7 @@ const chatChannelSchema = new mongoose.Schema(
       validate: {
         validator(val) {
           if (!this.isPrivate) return true;
-          return val.length > 8;
+          return val.length >= 8;
         },
         message: 'Password must have at least 8 charactres.',
       },

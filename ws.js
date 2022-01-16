@@ -56,6 +56,16 @@ exports.createWebSocketGraphQlServer = (server) => {
 
         return args;
       },
+      onError: (ctx, msg, errors) => {
+        console.error('👽👽👽 WS-SERVER ERROR START 👽👽👽');
+        console.error('--- message ---');
+        console.error(msg);
+        console.error('--- context ---');
+        console.error(ctx);
+        console.error('--- errors ---');
+        console.error(errors);
+        console.error('👽👽👽 WS-SERVER ERROR END 👽👽👽');
+      },
     },
     wsServer,
   );

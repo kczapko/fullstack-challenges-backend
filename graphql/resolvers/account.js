@@ -8,6 +8,8 @@ const Image = require('../../models/image');
 const Product = require('../../models/product');
 const ProductCategory = require('../../models/productCategory');
 const ShoppingList = require('../../models/shoppingList');
+const ChatChannel = require('../../models/chatChannel');
+const ChatMessage = require('../../models/chatMessage');
 
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
@@ -44,9 +46,9 @@ module.exports = {
       throw new AppError('Wrong current password', errorTypes.VALIDATION, 400);
 
     if (
-      // eslint-disable-next-line operator-linebreak
-      !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH }) ||
-      !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
+      // prettier-ignore
+      !validator.isLength(password, { max: process.env.MAX_PASSWORD_LENGTH })
+      || !validator.isLength(passwordConfirm, { max: process.env.MAX_PASSWORD_LENGTH })
     )
       throw new AppError(
         `Maximum password length is ${process.env.MAX_PASSWORD_LENGTH} characters.`,
@@ -79,6 +81,25 @@ module.exports = {
     await Product.deleteMany({ user: req.user });
     await ProductCategory.deleteMany({ user: req.user });
     await ShoppingList.deleteMany({ user: req.user });
+    await ChatMessage.deleteMany({ user: req.user });
+    const channels = await ChatChannel.find({
+      members: req.user,
+    });
+    if (channels.length) {
+      const updatePromises = channels
+        .map((channel) => {
+          // eslint-disable-next-line no-underscore-dangle
+          const user = channel.members.find((m) => m.toString() === req.user._id.toString());
+          if (user) {
+            channel.members.pull(user);
+            return channel.save({ timestamps: false });
+          }
+          return null;
+        })
+        .filter((c) => c !== null);
+
+      await Promise.all(updatePromises);
+    }
 
     await req.user.remove();
 

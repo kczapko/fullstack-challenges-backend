@@ -62,7 +62,12 @@ app.use(
           'https://accounts.google.com',
           'https://connect.facebook.net',
         ],
-        'default-src': ["'self'", 'https://accounts.google.com', 'https://www.facebook.com'],
+        'default-src': [
+          "'self'",
+          'https://accounts.google.com',
+          'https://www.facebook.com',
+          'wss://fullstack.kczapko.pl:3443/graphql',
+        ],
         'img-src': [
           "'self'",
           'data:',

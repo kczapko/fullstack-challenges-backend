@@ -16,6 +16,7 @@ const ACTION_NEW_MEMBER = 'NEW_MEMBER';
 const ACTION_NEW_MESSAGE = 'NEW_MESSAGE';
 const ACTION_NEW_CHANNEL = 'NEW_CHANNEL';
 const ACTION_JOINED_CHANNEL = 'JOIN_CHANNEL';
+const ACTION_CHAT_ERROR = 'CHAT_ERROR';
 
 module.exports = {
   addChannel: catchGraphqlConfimed(
@@ -75,73 +76,101 @@ module.exports = {
 
     return message;
   }),
-  getMessages: catchGraphqlConfimed(async ({ channelId, skip = 0, perPage = 50 }) => {
-    // eslint-disable-next-line arrow-body-style
-    const getMessagesQuery = () => {
-      return ChatMessage.find({ channel: channelId });
-    };
+  getMessages: catchGraphqlConfimed(
+    // eslint-disable-next-line object-curly-newline
+    async ({ channelId, skip = 0, perPage = 50, password = '' }) => {
+      const channel = await ChatChannel.findById(channelId);
 
-    const total = await getMessagesQuery().countDocuments();
-    if (total === 0)
-      return {
-        total: 0,
-        messages: [],
+      if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
+      if (channel.isPrivate && !(await channel.comparePassword(password)))
+        throw new AppError('Wrong password.', errorTypes.AUTHENTICATION, 401);
+
+      // eslint-disable-next-line arrow-body-style
+      const getMessagesQuery = () => {
+        return ChatMessage.find({ channel: channelId });
       };
 
-    const messages = await getMessagesQuery()
-      .sort('-createdAt')
-      .skip(skip)
-      .limit(perPage)
-      .populate({
-        path: 'user',
+      const total = await getMessagesQuery().countDocuments();
+      if (total === 0)
+        return {
+          total: 0,
+          messages: [],
+        };
+
+      const messages = await getMessagesQuery()
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(perPage)
+        .populate({
+          path: 'user',
+          select: 'name email photo username',
+        });
+
+      return {
+        total,
+        messages,
+      };
+    },
+  ),
+  joinChannel: async (args, ctx) => {
+    const { name, password = '' } = args;
+    let subscriptionError;
+
+    let channel = await ChatChannel.findOne({ name });
+
+    if (!channel) {
+      subscriptionError = true;
+      setImmediate(() => {
+        pubsub.publish(CHAT_ACTION, {
+          joinChannel: { type: ACTION_CHAT_ERROR, member: ctx.user, error: 'Channel not found!' },
+        });
+      });
+    }
+    // throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
+
+    if (!subscriptionError && channel.isPrivate && !(await channel.comparePassword(password))) {
+      subscriptionError = true;
+      setImmediate(() => {
+        pubsub.publish(CHAT_ACTION, {
+          joinChannel: { type: ACTION_CHAT_ERROR, member: ctx.user, error: 'Wrong password.' },
+        });
+      });
+    }
+    // throw new AppError('Wrong password.', errorTypes.AUTHENTICATION, 401);
+
+    if (!subscriptionError) {
+      const memeberExists = channel.members.find(
+        (memeber) => memeber._id.toString() === ctx.user._id.toString(),
+      );
+
+      if (!memeberExists) channel.members.push(ctx.user);
+      await channel.save();
+
+      channel = await ChatChannel.findOne({ name }).populate({
+        path: 'members',
         select: 'name email photo username',
       });
 
-    return {
-      total,
-      messages,
-    };
-  }),
-  joinChannel: async (args, ctx) => {
-    const { name, password = '' } = args;
-
-    const channel = await ChatChannel.findOne({ name });
-
-    if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
-
-    if (channel.isPrivate && !(await channel.comparePassword(password)))
-      throw new AppError('Wrong password.', errorTypes.AUTHENTICATION, 401);
-
-    channel.populate({
-      path: 'members',
-      select: 'name email photo username',
-    });
-
-    const memeberExists = channel.members.find(
-      (memeber) => memeber._id.toString() === ctx.user._id.toString(),
-    );
-
-    if (!memeberExists) channel.members.push(ctx.user);
-    await channel.save();
-
-    setTimeout(() => {
-      pubsub.publish(CHAT_ACTION, {
-        joinChannel: { type: ACTION_JOINED_CHANNEL, channel, member: ctx.user },
-      });
-      if (!memeberExists)
+      setImmediate(() => {
         pubsub.publish(CHAT_ACTION, {
-          joinChannel: {
-            type: ACTION_NEW_MEMBER,
-            member: ctx.user,
-            channel: {
-              _id: channel._id,
-              name: channel.name,
-              description: channel.description,
-              members: [],
-            },
-          },
+          joinChannel: { type: ACTION_JOINED_CHANNEL, channel, member: ctx.user },
         });
-    }, 0);
+        if (!memeberExists)
+          pubsub.publish(CHAT_ACTION, {
+            joinChannel: {
+              type: ACTION_NEW_MEMBER,
+              member: ctx.user,
+              channel: {
+                _id: channel._id,
+                name: channel.name,
+                description: channel.description,
+                isPrivate: channel.isPrivate,
+                members: [],
+              },
+            },
+          });
+      });
+    }
 
     return withFilter(
       () => pubsub.asyncIterator(CHAT_ACTION),
@@ -155,18 +184,31 @@ module.exports = {
         const { user, name: channelName } = variables;
 
         switch (type) {
+          case ACTION_CHAT_ERROR:
+            if (subscriptionError && member._id.toString() === user._id.toString()) return true;
+            return false;
           case ACTION_JOINED_CHANNEL:
-            if (member._id.toString() === user._id.toString()) return true;
+            if (!subscriptionError && member._id.toString() === user._id.toString()) return true;
             return false;
           case ACTION_NEW_MEMBER:
-            if (member._id.toString() !== user._id.toString() && channelName === channelData.name)
+            if (
+              // prettier-ignore
+              !subscriptionError
+              && member._id.toString() !== user._id.toString()
+              && channelName === channelData.name
+            )
               return true;
             return false;
           case ACTION_NEW_CHANNEL:
-            if (member._id.toString() !== user._id.toString()) return true;
+            if (!subscriptionError && member._id.toString() !== user._id.toString()) return true;
             return false;
           case ACTION_NEW_MESSAGE:
-            if (member._id.toString() !== user._id.toString() && channelName === channelData.name)
+            if (
+              // prettier-ignore
+              !subscriptionError
+              && member._id.toString() !== user._id.toString()
+              && channelName === channelData.name
+            )
               return true;
             return false;
           default:
