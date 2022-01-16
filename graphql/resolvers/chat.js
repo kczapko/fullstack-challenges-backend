@@ -22,6 +22,11 @@ module.exports = {
   addChannel: catchGraphqlConfimed(
     // eslint-disable-next-line object-curly-newline
     async ({ name, description, isPrivate = false, password = '' }, req) => {
+      // PROD handle duplicate keys
+      let channel = await ChatChannel.findOne({ name });
+      if (channel)
+        throw new AppError('Channel with that name already exists', errorTypes.VALIDATION, 400);
+
       let channelPassword = password;
 
       if (!isPrivate) channelPassword = undefined;
@@ -33,7 +38,7 @@ module.exports = {
             400,
           );
 
-      const channel = await ChatChannel.create({
+      channel = await ChatChannel.create({
         name,
         description,
         members: [req.user],

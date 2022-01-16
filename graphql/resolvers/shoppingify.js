@@ -17,6 +17,10 @@ const { catchGraphqlConfimed } = require('../../utils/catchAsync');
 
 module.exports = {
   addMyShoppingifyProduct: catchGraphqlConfimed(async ({ productInput }, req) => {
+    // PROD handle duplicate keys
+    let product = await Product.findOne({ name: productInput.name });
+    if (product)
+      throw new AppError('Product with that name already exists', errorTypes.VALIDATION, 400);
     // category - check for existience / create
     let category = await ProductCategory.findOne({ name: productInput.category, user: req.user });
 
@@ -52,7 +56,7 @@ module.exports = {
       imagePath = `/${publicPath(filename).replace(/\\/g, '/')}`;
     }
 
-    const product = Product.create({
+    product = Product.create({
       name: productInput.name,
       note: productInput.note,
       image: imagePath,

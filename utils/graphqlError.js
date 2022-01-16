@@ -1,7 +1,6 @@
 const formatError = require('./formatError');
 
 module.exports = (error) => {
-  console.error(error);
   console.error('🧨🧨🧨 GRAPHQL ERROR START 🧨🧨🧨');
   console.error(`${new Date().toLocaleString()}`);
   if (error.originalError) {
