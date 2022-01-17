@@ -1,6 +1,14 @@
 const formatError = require('./formatError');
 
 module.exports = (error) => {
+  if (
+    // prettier-ignore
+    process.env.NODE_ENV === 'production'
+    && error.originalError
+    && error.originalError.code === 11000
+  )
+    console.error(error.originalError);
+
   console.error('🧨🧨🧨 GRAPHQL ERROR START 🧨🧨🧨');
   console.error(`${new Date().toLocaleString()}`);
   if (error.originalError) {

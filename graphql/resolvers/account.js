@@ -17,6 +17,8 @@ const { createUserPhoto, deleteFile, deleteDir } = require('../../utils/files');
 const { publicPath } = require('../../utils/path');
 const { catchGraphqlAuth, catchGraphqlConfimed } = require('../../utils/catchAsync');
 
+const { pubsub, CHAT_ACTION, ACTION_STATUS_CHANGED } = require('../../utils/pubsub');
+
 module.exports = {
   confirmEmail: catchGraphqlAuth(async ({ token }, req) => {
     const result = await req.user.verifyEmail(token);
@@ -175,5 +177,15 @@ module.exports = {
     await req.user.save();
 
     return req.user;
+  }),
+  changeMyOnlineStatus: catchGraphqlConfimed(async ({ status }, req) => {
+    req.user.online = status;
+    await req.user.save();
+
+    pubsub.publish(CHAT_ACTION, {
+      joinChannel: { type: ACTION_STATUS_CHANGED, member: req.user },
+    });
+
+    return true;
   }),
 };

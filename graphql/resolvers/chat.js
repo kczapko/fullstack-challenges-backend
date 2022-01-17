@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-const { PubSub, withFilter } = require('graphql-subscriptions');
+const { withFilter } = require('graphql-subscriptions');
 const validator = require('validator');
 
 const ChatChannel = require('../../models/chatChannel');
@@ -9,14 +9,16 @@ const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
 const { catchGraphqlConfimed } = require('../../utils/catchAsync');
 
-const pubsub = new PubSub();
-const CHAT_ACTION = 'chat_action';
-
-const ACTION_NEW_MEMBER = 'NEW_MEMBER';
-const ACTION_NEW_MESSAGE = 'NEW_MESSAGE';
-const ACTION_NEW_CHANNEL = 'NEW_CHANNEL';
-const ACTION_JOINED_CHANNEL = 'JOIN_CHANNEL';
-const ACTION_CHAT_ERROR = 'CHAT_ERROR';
+const {
+  pubsub,
+  CHAT_ACTION,
+  ACTION_CHAT_ERROR,
+  ACTION_NEW_CHANNEL,
+  ACTION_JOINED_CHANNEL,
+  ACTION_NEW_MEMBER,
+  ACTION_NEW_MESSAGE,
+  ACTION_STATUS_CHANGED,
+} = require('../../utils/pubsub');
 
 module.exports = {
   addChannel: catchGraphqlConfimed(
@@ -153,7 +155,7 @@ module.exports = {
 
       channel = await ChatChannel.findOne({ name }).populate({
         path: 'members',
-        select: 'name email photo username',
+        select: 'name email photo username online',
       });
 
       setImmediate(() => {
@@ -215,6 +217,9 @@ module.exports = {
               && channelName === channelData.name
             )
               return true;
+            return false;
+          case ACTION_STATUS_CHANGED:
+            if (!subscriptionError) return true;
             return false;
           default:
             return false;

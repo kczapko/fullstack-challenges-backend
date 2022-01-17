@@ -15,6 +15,7 @@ const schema = buildSchema(`
   type UserPublic {
     username: String!
     photo: String
+    online: String!
   }
 
   type Image {
@@ -188,6 +189,7 @@ const schema = buildSchema(`
     changeMyPhoto(imageUrl: String!): User!
     deleteMyPhoto: Boolean!
     deleteMyAccount(password: String!): Boolean!
+    changeMyOnlineStatus(status: String!): Boolean!
     addMyUnsplashImage(label: String!, imageUrl: String!): Image!
     editMyUnsplashImage(id: ID!, label: String!): Image!
     deleteMyUnsplashImage(id: ID!, password: String!): Image!

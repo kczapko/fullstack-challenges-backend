@@ -41,4 +41,6 @@ const shoppingListSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+shoppingListSchema.index({ state: 1, user: 1 });
+
 module.exports = mongoose.model('ShoppingList', shoppingListSchema);

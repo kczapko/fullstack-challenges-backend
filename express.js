@@ -13,6 +13,7 @@ const graphqlErrorHandler = require('./utils/graphqlError');
 const auth = require('./middleware/auth');
 
 const filesRoutes = require('./routes/files');
+const accountRoutes = require('./routes/account');
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use(
 );
 
 app.use('/files', filesRoutes);
+app.use('/account', accountRoutes);
 
 app.use(
   helmet({
