@@ -8,6 +8,7 @@ const ChatMessage = require('../../models/chatMessage');
 const AppError = require('../../utils/AppError');
 const errorTypes = require('../../utils/errorTypes');
 const { catchGraphqlConfimed } = require('../../utils/catchAsync');
+const { getWorker } = require('../../utils/workers');
 
 const {
   pubsub,
@@ -18,7 +19,27 @@ const {
   ACTION_NEW_MEMBER,
   ACTION_NEW_MESSAGE,
   ACTION_STATUS_CHANGED,
+  ACTION_MESSAGE_UPDATED,
 } = require('../../utils/pubsub');
+
+const messageParser = getWorker('messageParser');
+messageParser.on('message', async ({ id }) => {
+  const message = await ChatMessage.findById(id).populate('user').populate('channel');
+
+  pubsub.publish(CHAT_ACTION, {
+    joinChannel: {
+      type: ACTION_MESSAGE_UPDATED,
+      message,
+      channel: {
+        _id: message.channel._id,
+        name: message.channel.name,
+        description: message.channel.description,
+        isPrivate: message.channel.isPrivate,
+        members: [],
+      },
+    },
+  });
+});
 
 module.exports = {
   addChannel: catchGraphqlConfimed(
@@ -80,6 +101,8 @@ module.exports = {
         member: req.user,
       },
     });
+
+    messageParser.send({ message: message.message, id: message._id });
 
     return message;
   }),
@@ -220,6 +243,9 @@ module.exports = {
             return false;
           case ACTION_STATUS_CHANGED:
             if (!subscriptionError) return true;
+            return false;
+          case ACTION_MESSAGE_UPDATED:
+            if (!subscriptionError && channelName === channelData.name) return true;
             return false;
           default:
             return false;

@@ -81,12 +81,21 @@ const schema = buildSchema(`
     isPrivate: Boolean!
   }
 
+  type MessageMeta {
+    type: String!
+    url: String!
+    title: String
+    description: String
+    image: String
+  }
+
   type Message {
     _id: ID!
     message: String!
     createdAt: String!
     user: UserPublic!
     channel: Channel!
+    meta: MessageMeta
   }
 
   type ChatSubscription {
