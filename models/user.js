@@ -203,7 +203,7 @@ userSchema.methods.getImagesDirectory = async function () {
   // eslint-disable-next-line no-underscore-dangle
   const dir = path.join(baseDir, 'public', 'images', 'user', this._id.toString());
 
-  if (this.imagesDirectoriesCreated < 1) await this.createImageDirectories(dir);
+  if (this.imagesDirectoriesCreated < 2) await this.createImageDirectories(dir);
 
   return dir;
 };
@@ -212,8 +212,9 @@ userSchema.methods.createImageDirectories = async function (dir) {
   await fs.mkdir(dir, { recursive: true });
   await fs.mkdir(path.join(dir, 'unsplash'), { recursive: true });
   await fs.mkdir(path.join(dir, 'shoppingify'), { recursive: true });
+  await fs.mkdir(path.join(dir, 'chat'), { recursive: true });
 
-  this.imagesDirectoriesCreated = 1;
+  this.imagesDirectoriesCreated = 2;
   await this.save();
 };
 

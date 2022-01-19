@@ -24,21 +24,26 @@ const {
 
 const messageParser = getWorker('messageParser');
 messageParser.on('message', async ({ id }) => {
-  const message = await ChatMessage.findById(id).populate('user').populate('channel');
+  try {
+    const message = await ChatMessage.findById(id).populate('user').populate('channel');
 
-  pubsub.publish(CHAT_ACTION, {
-    joinChannel: {
-      type: ACTION_MESSAGE_UPDATED,
-      message,
-      channel: {
-        _id: message.channel._id,
-        name: message.channel.name,
-        description: message.channel.description,
-        isPrivate: message.channel.isPrivate,
-        members: [],
+    pubsub.publish(CHAT_ACTION, {
+      joinChannel: {
+        type: ACTION_MESSAGE_UPDATED,
+        message,
+        channel: {
+          _id: message.channel._id,
+          name: message.channel.name,
+          description: message.channel.description,
+          isPrivate: message.channel.isPrivate,
+          members: [],
+        },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error('Update chat message failed.', err.message);
+    console.error(err);
+  }
 });
 
 module.exports = {
@@ -93,18 +98,16 @@ module.exports = {
     });
 
     pubsub.publish(CHAT_ACTION, {
-      // prettier-ignore
       joinChannel: {
         type: ACTION_NEW_MESSAGE,
         message,
         channel: { ...channel.toJSON(), members: [] },
-        member: req.user,
       },
     });
 
     messageParser.send({ message: message.message, id: message._id });
 
-    return message;
+    return true;
   }),
   getMessages: catchGraphqlConfimed(
     // eslint-disable-next-line object-curly-newline
@@ -236,7 +239,6 @@ module.exports = {
             if (
               // prettier-ignore
               !subscriptionError
-              && member._id.toString() !== user._id.toString()
               && channelName === channelData.name
             )
               return true;

@@ -95,6 +95,7 @@ const schema = buildSchema(`
     createdAt: String!
     user: UserPublic!
     channel: Channel!
+    type: String!
     meta: MessageMeta
   }
 
@@ -210,7 +211,7 @@ const schema = buildSchema(`
     completeMyShoppingList: Boolean!
     cancelMyShoppingList: Boolean!
     addChannel(name: String!, description: String, isPrivate: Boolean, password: String): Channel!
-    addMessage(msg: String!, channelId: ID!): Message!
+    addMessage(msg: String!, channelId: ID!): Boolean!
   }
 
   type RootSubscription {

@@ -29,6 +29,10 @@ const chatMessageSchema = new mongoose.Schema(
       trim: true,
       required: [true, 'Message can not be empty.'],
       maxlength: [1000, 'Maximum message length is 1000 characters.'],
+      get(v) {
+        if (this.type === 'image') return `${process.env.SERVER_URL}${v}`;
+        return v;
+      },
     },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
@@ -42,6 +46,12 @@ const chatMessageSchema = new mongoose.Schema(
     },
     meta: {
       type: chatMessageMetaSchema,
+    },
+    type: {
+      type: String,
+      required: [true, 'Message must have type.'],
+      enum: ['message', 'image'],
+      default: 'message',
     },
   },
   { timestamps: true },

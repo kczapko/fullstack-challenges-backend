@@ -16,7 +16,7 @@ const parseMessage = async ({ message, id }) => {
       // prettier-ignore
       (match) => validator.isURL(match[0], { protocols: ['http', 'https'], require_protocol: true }) && match[0],
     )
-    .filter((word) => word);
+    .filter((match) => match);
 
   const [link] = links;
   if (!link) return;
@@ -100,10 +100,16 @@ const parseMessage = async ({ message, id }) => {
   }
 
   if (messageMeta.type && messageMeta.url) {
-    const chatMessage = await ChatMessage.findById(id);
+    try {
+      const chatMessage = await ChatMessage.findById(id);
 
-    chatMessage.meta = messageMeta;
-    await chatMessage.save();
+      chatMessage.meta = messageMeta;
+      await chatMessage.save();
+    } catch (err) {
+      console.error('messageParser Error: ', err.message);
+      console.error(err);
+      return;
+    }
 
     process.send({ id });
   }

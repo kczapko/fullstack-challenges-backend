@@ -6,6 +6,6 @@ const accountController = require('../controllers/account');
 const router = express.Router();
 const upload = multer();
 
-router.post('/set-status', upload.none(), accountController.changeMyOnlineStatus);
+router.post('/set-offline', upload.none(), accountController.setOffline);
 
 module.exports = router;
