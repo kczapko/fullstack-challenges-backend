@@ -5,6 +5,6 @@ const filesController = require('../controllers/files');
 const router = express.Router();
 
 router.post('/user-photo', filesController.fileUpload, filesController.saveUserPhoto);
-router.post('/chat-image/:channelId', filesController.fileUpload, filesController.addChatImage);
+router.post('/chat-image/:name', filesController.fileUpload, filesController.addChatImage);
 
 module.exports = router;

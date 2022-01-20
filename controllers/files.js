@@ -29,14 +29,15 @@ exports.saveUserPhoto = catchExpressConfimed(async (req, res, next) => {
 });
 
 exports.addChatImage = catchExpressConfimed(async (req, res, next) => {
+  const channel = await ChatChannel.findOne({ name: req.params.name });
+  if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
+  if (channel.isPrivate && !(await channel.comparePassword(req.body.password)))
+    throw new AppError('Wrong password', errorTypes.VALIDATION, 400);
+
   const dir = await req.user.getImagesDirectory();
   const filename = await createChatImage(req.file.buffer, dir);
 
   const imagePath = `/${publicPath(filename).replace(/\\/g, '/')}`;
-
-  const channel = await ChatChannel.findById(req.params.channelId);
-
-  if (!channel) throw new AppError('Channel not found!', errorTypes.VALIDATION, 400);
 
   const message = await ChatMessage.create({
     message: imagePath,
