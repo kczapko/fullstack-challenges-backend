@@ -75,10 +75,10 @@ module.exports = {
       });
 
       pubsub.publish(CHAT_ACTION, {
-        joinChannel: { type: ACTION_NEW_CHANNEL, channel, member: req.user },
+        joinChannel: { type: ACTION_NEW_CHANNEL, channel },
       });
 
-      return channel;
+      return true;
     },
   ),
   getChannels: catchGraphqlConfimed(async () => {
@@ -233,7 +233,7 @@ module.exports = {
               return true;
             return false;
           case ACTION_NEW_CHANNEL:
-            if (!subscriptionError && member._id.toString() !== user._id.toString()) return true;
+            if (!subscriptionError) return true;
             return false;
           case ACTION_NEW_MESSAGE:
             if (

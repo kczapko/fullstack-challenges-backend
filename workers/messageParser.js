@@ -28,6 +28,9 @@ const parseMessage = async ({ message, id }) => {
   try {
     res = await axios.get(link, {
       responseType: 'arraybuffer',
+      headers: {
+        range: 'bytes=0-1023',
+      },
     });
   } catch (err) {
     console.error('messageParser Error: ', err.message);

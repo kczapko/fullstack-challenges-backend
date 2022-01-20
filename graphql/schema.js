@@ -210,7 +210,7 @@ const schema = buildSchema(`
     toggleShoppingifyProductCompletion(id: ID!, completed: Boolean!): Boolean!
     completeMyShoppingList: Boolean!
     cancelMyShoppingList: Boolean!
-    addChannel(name: String!, description: String, isPrivate: Boolean, password: String): Channel!
+    addChannel(name: String!, description: String, isPrivate: Boolean, password: String): Boolean!
     addMessage(msg: String!, channelId: ID!): Boolean!
   }
 
